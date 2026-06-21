@@ -1,0 +1,26 @@
+# dave-agent
+
+Run without installing:
+
+```bash
+python3 -m dave_agent --port 8002
+```
+
+Or through the wrapper:
+
+```bash
+python3 agent.py --port 8002
+```
+
+Install as a local editable command:
+
+```bash
+python3 -m pip install -e .
+dave-agent --port 8002
+```
+
+Useful options:
+
+```bash
+dave-agent --port 8002 --debug --think low --system "Jesteś pomocnym asystentem. Odpowiadaj zawsze po polsku"
+```

@@ -1,0 +1,7 @@
+[project]
+name = "dave-agent"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[project.scripts]
+dave-agent = "dave_agent.__main__:main"
