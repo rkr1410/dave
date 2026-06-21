@@ -34,7 +34,7 @@ def main():
         print_debug("MODELS", model_info)
 
     while True:
-        text = input("user> ")
+        text = input("Dave> ")
         if text in {"/exit", "/quit"}:
             break
 
@@ -46,7 +46,7 @@ def main():
 
         for kind, token in agent.stream_chat():
             if kind != last_kind:
-                print(f"\n{kind}> ", end="", flush=True)
+                print(f"\n{'HAL-9000' if kind == 'content' else kind}> ", end="", flush=True)
                 last_kind = kind
             print(token, end="", flush=True)
 

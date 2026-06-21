@@ -19,8 +19,15 @@ python3 -m pip install -e .
 dave --port 8002
 ```
 
+Run TUI:
+
+```bash
+dave-tui --port 8002
+```
+
 Useful options:
 
 ```bash
 dave --port 8002 --debug --think low --system "Jesteś pomocnym asystentem. Odpowiadaj zawsze po polsku"
+dave-tui --port 8002 --debug --think low
 ```
