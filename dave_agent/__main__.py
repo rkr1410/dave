@@ -2,18 +2,19 @@ import argparse
 import json
 
 from .agent import Agent
+from .config import THINK_LEVELS, load_config
 from .openai_client import OpenAIClient
 
 
-def parse_args():
+def parse_args(config):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="HAL-9000.local")
-    parser.add_argument("--port", default=8002, type=int)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--temp", default=0.2, type=float)
-    parser.add_argument("--replyTokens", default=2000, type=int)
-    parser.add_argument("--think", choices=["none", "minimal", "low", "medium", "high", "xhigh", "max"])
-    parser.add_argument("--system", default="Jesteś przyjaznym agentem. Odpowiadaj zawsze po polsku.")
+    parser.add_argument("--host", default=config["host"])
+    parser.add_argument("--port", default=config["port"], type=int)
+    parser.add_argument("--debug", default=config["debug"], action="store_true")
+    parser.add_argument("--temp", default=config["temperature"], type=float)
+    parser.add_argument("--replyTokens", default=config["reply_tokens"], type=int)
+    parser.add_argument("--think", default=config["think"], choices=THINK_LEVELS)
+    parser.add_argument("--system", default=config["system"])
     return parser.parse_args()
 
 
@@ -23,7 +24,7 @@ def print_debug(name, value):
 
 
 def main():
-    args = parse_args()
+    args = parse_args(load_config())
     client = OpenAIClient(args.host, args.port)
     agent = Agent(client, args.temp, args.replyTokens, args.think, args.system)
 

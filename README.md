@@ -1,4 +1,4 @@
-# dave-agent
+# dave
 
 Run without installing:
 
@@ -16,11 +16,11 @@ Install as a local editable command:
 
 ```bash
 python3 -m pip install -e .
-dave-agent --port 8002
+dave --port 8002
 ```
 
 Useful options:
 
 ```bash
-dave-agent --port 8002 --debug --think low --system "Jesteś pomocnym asystentem. Odpowiadaj zawsze po polsku"
+dave --port 8002 --debug --think low --system "Jesteś pomocnym asystentem. Odpowiadaj zawsze po polsku"
 ```
