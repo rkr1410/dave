@@ -1,6 +1,6 @@
 class StreamCompactor:
     @staticmethod
-    def compact(chunks):
+    def compact(chunks, model=None):
         compacted = {
             "object": "chat.completion.stream",
             "chunk_count": len(chunks),
@@ -8,6 +8,9 @@ class StreamCompactor:
             "events": [],
         }
         choices = {}
+        reasoning_keys = {"reasoning"}
+        if model and "deepseek" in model.lower():
+            reasoning_keys.add("reasoning_content")
 
         def set_or_event(target, key, value, chunk_index):
             if key not in target:
@@ -23,6 +26,11 @@ class StreamCompactor:
                     continue
                 if key == "object":
                     set_or_event(compacted, "chunk_object", value, chunk_index)
+                elif key == "created" and "created_first" in compacted:
+                    compacted["created_last"] = value
+                elif key == "created" and "created" in compacted and compacted["created"] != value:
+                    compacted["created_first"] = compacted.pop("created")
+                    compacted["created_last"] = value
                 else:
                     set_or_event(compacted, key, value, chunk_index)
 
@@ -32,7 +40,7 @@ class StreamCompactor:
                 delta = choice.get("delta", {})
 
                 for key, value in delta.items():
-                    if key in {"reasoning", "content"}:
+                    if key in reasoning_keys or key == "content":
                         if value:
                             compact_choice["delta"][key] = compact_choice["delta"].get(key, "") + value
                     elif key == "role":

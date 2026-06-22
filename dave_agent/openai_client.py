@@ -34,7 +34,11 @@ class OpenAIClient:
     def get_model_info(self):
         req = http.Request(f"{self.base}/v1/models")
         resp = json.load(http.urlopen(req))
+        model = resp["data"][0].get("id")
+        max_context_len = resp["data"][0].get("max_model_len")
+        if max_context_len is None:
+            max_context_len = resp["data"][0].get("context_length")
         return {
-            "model": resp["data"][0]["id"],
-            "context_len": resp["data"][0]["max_model_len"],
+            "model": model,
+            "context_len": max_context_len,
         }

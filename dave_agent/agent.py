@@ -31,6 +31,8 @@ class Agent:
                 continue
             delta = choices[0].get("delta", {})
             reasoning = delta.get("reasoning")
+            if reasoning is None and "deepseek" in self.model_info["model"].lower():
+                reasoning = delta.get("reasoning_content")
             if reasoning:
                 yield "reasoning", reasoning
             content = delta.get("content")
@@ -38,7 +40,7 @@ class Agent:
                 parts.append(content)
                 yield "content", content
         self.messages.append({"role": "assistant", "content": "".join(parts)})
-        self.last_response = StreamCompactor.compact(self.client.last_chunks)
+        self.last_response = StreamCompactor.compact(self.client.last_chunks, self.model_info["model"])
 
     def build_body(self):
         body = {
