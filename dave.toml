@@ -1,7 +1,8 @@
 host = "HAL-9000.local"
-port = 8002
+port = 8000
 debug = false
 temperature = 0.2
 reply_tokens = 2000
 think = ""
+tools = ""
 system = "Jesteś przyjaznym agentem. Odpowiadaj zawsze po polsku."

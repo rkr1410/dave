@@ -29,5 +29,6 @@ Useful options:
 
 ```bash
 dave --port 8002 --debug --think low --system "Jesteś pomocnym asystentem. Odpowiadaj zawsze po polsku"
+dave --port 8002 --tools "list-files, read-file"
 dave-tui --port 8002 --debug --think low
 ```

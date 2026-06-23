@@ -20,4 +20,6 @@ response = client.chat.completions.create(
 answer = response.choices[0].message.content
 ```
 
-* ew. nie wiadomo na ile OpenAI ma tryb kompatybilności, może jak dojdzie kolejney 'trcohęinny' model openai-compatible to dorobić pluginy, bo jest jużw 3 miejscach de facto "if deepseek": sprawdzanie max content length streamowanie w agent.py i kompaktowanie 
+* ew. nie wiadomo na ile OpenAI ma tryb kompatybilności, może jak dojdzie kolejney 'trcohęinny' model openai-compatible to dorobić pluginy, bo jest jużw 3 miejscach de facto "if deepseek": sprawdzanie max content length streamowanie w agent.py i kompaktowanie
+* cutoff na read-file? na pewno dodać rg
+* jeśli jakieśdestructive commands, to może side-model na odpytywanie o bezpieczeństwo?

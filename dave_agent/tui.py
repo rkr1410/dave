@@ -1,5 +1,6 @@
 import argparse
 import json
+from pathlib import Path
 import threading
 
 from textual.app import App, ComposeResult
@@ -9,6 +10,7 @@ from textual.widgets import Footer, Header, Input, Static
 from .agent import Agent
 from .config import THINK_LEVELS, load_config
 from .openai_client import OpenAIClient
+from .tools import ToolRegistry
 
 
 def parse_args(config):
@@ -19,6 +21,7 @@ def parse_args(config):
     parser.add_argument("--temp", default=config["temperature"], type=float)
     parser.add_argument("--replyTokens", default=config["reply_tokens"], type=int)
     parser.add_argument("--think", default=config["think"], choices=THINK_LEVELS)
+    parser.add_argument("--tools", default=config["tools"])
     parser.add_argument("--system", default=config["system"])
     return parser.parse_args()
 
@@ -55,6 +58,10 @@ class DaveApp(App):
 
     .debug {
         color: $text-muted;
+    }
+
+    .tool {
+        color: magenta;
     }
 
     .error {
@@ -156,7 +163,8 @@ class DaveApp(App):
 def main():
     args = parse_args(load_config())
     client = OpenAIClient(args.host, args.port)
-    agent = Agent(client, args.temp, args.replyTokens, args.think, args.system)
+    tools = ToolRegistry.from_spec(Path.cwd(), args.tools) if args.tools else None
+    agent = Agent(client, args.temp, args.replyTokens, args.think, args.system, tools)
     DaveApp(agent, args.debug).run()
 
 
