@@ -58,7 +58,7 @@ log from which the conversation can be materialized.
   - support user and assistant messages
   - ignore event types the materializer does not know (not just
     `RequestApproved`) so future canonical events don't break it
-- [ ] Add fake provider client
+- [x] Add fake provider client
   - accepts `ChatRequest`
   - streams deterministic chunks
   - can simulate failure for tests
