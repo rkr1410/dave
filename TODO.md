@@ -34,16 +34,8 @@ log from which the conversation can be materialized.
 
 ### Tasks
 
-- [ ] Create package skeleton
-  - `dave/core/session.py`
-  - `dave/core/events.py`
-  - `dave/core/stream_events.py`
-  - `dave/core/messages.py`
-  - `dave/core/requests.py`
-  - `dave/core/artifacts.py`
-  - `dave/providers/client.py` (client protocol)
-  - `dave/providers/fake.py` (fake client — in the package, not in tests,
-    so the CLI smoke and later UI development can use it)
+- [x] Create package skeleton from `DOMAIN.md` package sketch
+  - include `dave/providers/fake.py` for tests and smoke runs
 - [ ] Define minimal domain dataclasses
   - canonical: `UserMessageAppended`, `RequestApproved`, `RequestRejected`,
     `AssistantMessageAppended`, `ModelResponseFailed`
