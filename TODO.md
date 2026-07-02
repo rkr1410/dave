@@ -49,10 +49,10 @@ log from which the conversation can be materialized.
   - append canonical events
   - assign ids, maintain `parent_id`
   - expose current event list
-- [ ] Add in-memory artifact store
+- [x] Add in-memory artifact store
   - store/retrieve payloads by `ArtifactRef`
-  - `RequestApproved` carries a real ref to the serialized request
-  - `ModelResponseFailed` carries real refs to error details and partial output
+  - can store a serialized request payload for `RequestApproved`
+  - can store error details and partial output payloads for `ModelResponseFailed`
 - [ ] Add message materialization
   - build `messages[]` from canonical events
   - support user and assistant messages
@@ -104,6 +104,13 @@ UX (epic 1 only proves the seam works), branching.
 - Decide JSON argument validation/serialization for `ToolCall.arguments` at the
   provider boundary; avoid ad hoc frozen-json machinery in core unless the
   boundary actually needs it.
+
+## Open questions
+
+- How much pluggability do we want? Allow user extensions to emit events
+  that e.g. the artifact store should be aware of? How much is too much (e.g.
+  if the core loses ful control of messages[] materialization, we lose debug/replay/compatibilty
+  without the exact plugin versions)
 
 ## Later
 
