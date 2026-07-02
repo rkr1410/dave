@@ -43,9 +43,9 @@ log from which the conversation can be materialized.
     `ModelResponseFinished`
   - other: `Message`, `ChatRequest`, `ArtifactRef`, `ToolCall`, `Approve`,
     `Reject`
-  - `ToolCall` lives in `core/tool_calls.py` so `messages.py` and `requests.py`
+  - *dev comment* `ToolCall` lives in `core/tool_calls.py` so `messages.py` and `requests.py`
     do not depend on each other.
-- [ ] Add in-memory event log
+- [x] Add in-memory event log
   - append canonical events
   - assign ids, maintain `parent_id`
   - expose current event list

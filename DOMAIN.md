@@ -210,6 +210,7 @@ The package layout should make the event boundary obvious:
 dave/
   core/
     session.py
+    event_log.py
     events.py
     stream_events.py
     messages.py
