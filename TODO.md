@@ -1,25 +1,10 @@
-* przejść na open-ai
+# TODO
 
-```python
-from openai import OpenAI
+## Later
 
-client = OpenAI(
-    base_url="http://HAL-9000.local:8002/v1",
-    api_key="EMPTY",
-)
-
-model = client.models.list().data[0].id
-
-response = client.chat.completions.create(
-    model=model,
-    messages=messages,
-    temperature=0.2,
-    max_tokens=1000,
-)
-
-answer = response.choices[0].message.content
-```
-
-* ew. nie wiadomo na ile OpenAI ma tryb kompatybilności, może jak dojdzie kolejney 'trcohęinny' model openai-compatible to dorobić pluginy, bo jest jużw 3 miejscach de facto "if deepseek": sprawdzanie max content length streamowanie w agent.py i kompaktowanie
-* cutoff na read-file? na pewno dodać rg
-* jeśli jakieśdestructive commands, to może side-model na odpytywanie o bezpieczeństwo?
+- Add optional install settings:
+  - `DAVE_BIN_DIR`: directory for the global `dave` wrapper.
+  - `DAVE_VENV_DIR`: virtualenv path.
+  - `DAVE_INSTALL_ROOT`: directory for commit install snapshots.
+  - `PYTHON_BIN`: Python executable used to create the venv.
+  - `DAVE_UPGRADE_PIP`: whether to upgrade pip during install.
