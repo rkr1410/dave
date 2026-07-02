@@ -36,12 +36,15 @@ log from which the conversation can be materialized.
 
 - [x] Create package skeleton from `DOMAIN.md` package sketch
   - include `dave/providers/fake.py` for tests and smoke runs
-- [ ] Define minimal domain dataclasses
+- [x] Define minimal domain dataclasses
   - canonical: `UserMessageAppended`, `RequestApproved`, `RequestRejected`,
-    `AssistantMessageAppended`, `ModelResponseFailed`
+    `AssistantMessageAppended`, `ToolResultAppended`, `ModelResponseFailed`
   - stream: `RequestBuilt`, `RequestSent`, `TextDelta`, `ReasoningDelta`,
     `ModelResponseFinished`
-  - other: `Message`, `ChatRequest`, `ArtifactRef`
+  - other: `Message`, `ChatRequest`, `ArtifactRef`, `ToolCall`, `Approve`,
+    `Reject`
+  - `ToolCall` lives in `core/tool_calls.py` so `messages.py` and `requests.py`
+    do not depend on each other.
 - [ ] Add in-memory event log
   - append canonical events
   - assign ids, maintain `parent_id`
@@ -93,6 +96,14 @@ log from which the conversation can be materialized.
 Out of scope (later epics): real OpenAI-compatible client (epic 2), disk
 storage (epic 5), UI (epic 6), tool execution (epic 7), interactive approval
 UX (epic 1 only proves the seam works), branching.
+
+## Epic 2 notes
+
+- Decide whether provider-facing request/response/debug schemas should use
+  Pydantic models instead of plain dataclasses.
+- Decide JSON argument validation/serialization for `ToolCall.arguments` at the
+  provider boundary; avoid ad hoc frozen-json machinery in core unless the
+  boundary actually needs it.
 
 ## Later
 

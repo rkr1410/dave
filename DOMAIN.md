@@ -213,6 +213,7 @@ dave/
     events.py
     stream_events.py
     messages.py
+    tool_calls.py
     requests.py
     branches.py
     artifacts.py
