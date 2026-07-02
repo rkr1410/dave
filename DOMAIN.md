@@ -164,9 +164,13 @@ submit_user_message()
   -> emit RequestSent StreamEvent
   -> stream TextDelta/ReasoningDelta StreamEvents
   -> accumulate assistant draft
-  -> append AssistantMessageAppended canonical event
   -> emit ModelResponseFinished StreamEvent
+  -> append AssistantMessageAppended canonical event
 ```
+
+`ModelResponseFinished` reports the stream ending; the canonical commit
+follows it. The canonical event is the signal that the message is durable,
+so it comes last in the iteration.
 
 ## Tool loop shape (sketch)
 
@@ -181,10 +185,11 @@ submit_user_message()
   -> append UserMessageAppended
   -> loop:
        materialize_messages()
-       build_request() -> inspect/edit boundary -> append RequestApproved
-       send_request() -> stream -> append AssistantMessageAppended
-       if the assistant message contains no tool calls: break
-       execute tools (out of scope here)
+       ...
+       (out of scope here):
+           if the assistant message contains no tool calls: break
+           execute tools
+       ...
        append ToolResultAppended for each result
 ```
 
