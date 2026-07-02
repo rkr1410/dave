@@ -13,7 +13,7 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 
 0. Domain model spike
 1. Core session runtime
-2. Model client and stream adapter
+2. Provider client and stream adapter
 3. Event log and message materialization
 4. Request/response debug visibility
 5. Trace and artifact storage
@@ -30,6 +30,7 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 
 - Domain model spike should settle initial shapes for `Session`, `Branch`, `Event`,
   `Message`, `ChatRequest`, `StreamEvent`, `ToolCall`, and `ArtifactRef`.
+  Current spike output lives in `DOMAIN.md`.
 - Epics are ordered by intended implementation sequence.
 - Core must stay independent from UI.
 - `messages[]` should be a materialized view, not the source of truth.
@@ -40,3 +41,6 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 - Trace/artifacts means raw payloads, chunks, requests, responses, and large tool outputs.
 - Plugins should intercept behavior without coupling core to Textual.
 - First implementation slice should be headless.
+- The tool loop *shape* is sketched in `DOMAIN.md` before the UI epic, but tool
+  execution stays in epic 7. The UI MVP targets the linear happy path
+  (send text -> model response) without contradicting the loop shape.
