@@ -34,11 +34,10 @@ class Agent:
                 if not choices:
                     continue
                 delta = choices[0].get("delta", {})
-                reasoning = delta.get("reasoning")
-                if reasoning is None and "deepseek" in self.model_info["model"].lower():
-                    reasoning = delta.get("reasoning_content")
-                if reasoning:
-                    yield "reasoning", reasoning
+                for reasoning_key in StreamCompactor.REASONING_KEYS:
+                    reasoning = delta.get(reasoning_key)
+                    if reasoning:
+                        yield "reasoning", reasoning
                 content = delta.get("content")
                 if content:
                     parts.append(content)

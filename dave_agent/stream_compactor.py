@@ -1,4 +1,6 @@
 class StreamCompactor:
+    REASONING_KEYS = ("reasoning", "reasoning_content")
+
     @staticmethod
     def compact(chunks, model=None):
         compacted = {
@@ -8,9 +10,6 @@ class StreamCompactor:
             "events": [],
         }
         choices = {}
-        reasoning_keys = {"reasoning"}
-        if model and "deepseek" in model.lower():
-            reasoning_keys.add("reasoning_content")
 
         def set_or_event(target, key, value, chunk_index):
             if key not in target:
@@ -59,7 +58,7 @@ class StreamCompactor:
                 delta = choice.get("delta", {})
 
                 for key, value in delta.items():
-                    if key in reasoning_keys or key == "content":
+                    if key in StreamCompactor.REASONING_KEYS or key == "content":
                         if value:
                             compact_choice["delta"][key] = compact_choice["delta"].get(key, "") + value
                     elif key == "tool_calls":

@@ -25,6 +25,11 @@ class ToolRegistry:
         ListFilesTool.name: ListFilesTool,
         ReadFileTool.name: ReadFileTool,
     }
+    cli_aliases = {
+        alias: tool.name
+        for tool in available_tools.values()
+        for alias in tool.aliases
+    }
 
     def __init__(self, workspace_root, tool_names):
         self.workspace = Workspace(workspace_root)
@@ -41,8 +46,9 @@ class ToolRegistry:
 
     @classmethod
     def from_spec(cls, workspace_root, spec):
-        names = [name.strip() for name in spec.split(",") if name.strip()]
-        unknown = [name for name in names if name not in cls.available_tools]
+        raw_names = [name.strip() for name in spec.split(",") if name.strip()]
+        names = [cls.cli_aliases.get(name, name) for name in raw_names]
+        unknown = [name for name in raw_names if cls.cli_aliases.get(name, name) not in cls.available_tools]
         if unknown:
             raise ValueError(f"unknown tools: {', '.join(unknown)}")
         return cls(workspace_root, names)
