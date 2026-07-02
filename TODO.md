@@ -53,7 +53,7 @@ log from which the conversation can be materialized.
   - store/retrieve payloads by `ArtifactRef`
   - can store a serialized request payload for `RequestApproved`
   - can store error details and partial output payloads for `ModelResponseFailed`
-- [ ] Add message materialization
+- [x] Add message materialization
   - build `messages[]` from canonical events
   - support user and assistant messages
   - ignore event types the materializer does not know (not just
@@ -111,6 +111,13 @@ UX (epic 1 only proves the seam works), branching.
   that e.g. the artifact store should be aware of? How much is too much (e.g.
   if the core loses ful control of messages[] materialization, we lose debug/replay/compatibilty
   without the exact plugin versions)
+
+## Soon after Epic 1
+
+- If first real use shows that Dave needs a system/developer prompt and simple
+  `list_files` / `read_file` tool calls to be useful, add a small spike for the
+  cheapest coherent path: enough to work, without falling into the full tool
+  registry/plugin implementation.
 
 ## Later
 
