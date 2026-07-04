@@ -10,6 +10,7 @@ from dave.core.event_log import EventLog
 from dave.core.events import (
     AssistantMessageAppended,
     Event,
+    ModelResponseFailed,
     RequestApproved,
     RequestRejected,
     UserMessageAppended,
@@ -23,7 +24,7 @@ from dave.core.stream_events import (
     StreamEvent,
     TextDelta,
 )
-from dave.providers.client import ProviderClient
+from dave.providers.client import ProviderClient, ProviderError
 from dave.providers.fake import FakeProviderClient
 
 Approver = Callable[[ChatRequest], Awaitable[Approve | Reject]]
@@ -89,10 +90,32 @@ class Session:
         yield RequestSent(deepcopy(approved_request))
 
         assistant_text = ""
-        async for event in self.send_request(approved_request):
-            if isinstance(event, TextDelta):
-                assistant_text += event.text
-            yield event
+        try:
+            async for event in self.send_request(approved_request):
+                if isinstance(event, TextDelta):
+                    assistant_text += event.text
+                yield event
+        except ProviderError as error:
+            error_ref = self._artifact_store.put(
+                {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                },
+                "errors",
+            )
+            partial_output_ref = (
+                self._artifact_store.put(assistant_text, "partial-outputs")
+                if assistant_text
+                else None
+            )
+            failed_event = self._event_log.append(
+                ModelResponseFailed(
+                    error_ref=error_ref,
+                    partial_output_ref=partial_output_ref,
+                )
+            )
+            yield failed_event
+            return
 
         yield ModelResponseFinished()
 

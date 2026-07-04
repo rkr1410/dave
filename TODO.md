@@ -77,8 +77,10 @@ log from which the conversation can be materialized.
   - *dev comment* the approved request artifact is an in-memory
     provider-neutral `ChatRequest` snapshot for now, not the final serialized
     debug schema
-- [ ] Handle provider failure
+- [x] Handle provider failure
   - append `ModelResponseFailed` with error/partial-output artifact refs
+  - leave `partial_output_ref` empty when the provider fails before any
+    `TextDelta`
   - do not append a partial `AssistantMessageAppended`
   - yield `ModelResponseFailed` and end the generator normally
 - [ ] Add tests
