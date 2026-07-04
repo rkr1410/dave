@@ -8,7 +8,7 @@ from dave.core.events import (
     RequestRejected,
     UserMessageAppended,
 )
-from dave.core.messages import Message, materialize_messages
+from dave.core.messages import AssistantMessage, UserMessage, materialize_messages
 from dave.core.requests import Approve, ChatRequest, Reject
 from dave.core.session import Session, SessionEvent
 from dave.core.stream_events import (
@@ -64,7 +64,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
             built_request,
             ChatRequest(
                 model="fake-model",
-                messages=(Message(role="user", content="hello"),),
+                messages=(UserMessage(content="hello"),),
             ),
         )
         self.assertEqual(artifact_store.get(approved_event.request_ref), sent_request)
@@ -72,15 +72,15 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             materialize_messages(session.events),
             (
-                Message(role="user", content="hello"),
-                Message(role="assistant", content="hello world"),
+                UserMessage(content="hello"),
+                AssistantMessage(content="hello world"),
             ),
         )
 
     async def test_approval_boundary_can_edit_or_reject_request(self) -> None:
         edited_request = ChatRequest(
             model="edited-model",
-            messages=(Message(role="user", content="edited"),),
+            messages=(UserMessage(content="edited"),),
         )
 
         async def edit_request(request: ChatRequest) -> Approve:
@@ -155,7 +155,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(before_text_failure.partial_output_ref)
         self.assertEqual(
             materialize_messages(before_text_session.events),
-            (Message(role="user", content="hello"),),
+            (UserMessage(content="hello"),),
         )
 
         artifact_store = InMemoryArtifactStore()
@@ -195,7 +195,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(artifact_store.get(failure.partial_output_ref), "part")
         self.assertEqual(
             materialize_messages(session.events),
-            (Message(role="user", content="hello"),),
+            (UserMessage(content="hello"),),
         )
 
 

@@ -147,28 +147,37 @@ through the same core flow tested in Epic 1.
 
 - [x] Add the OpenAI SDK dependency
   - use the async client API
-- [ ] Add OpenAI-compatible provider client
+- [x] Add OpenAI-compatible provider slice
   - create from explicit constructor args
   - require `base_url`
   - accept optional `api_key`, with a harmless dummy default for local
     OpenAI-compatible endpoints that require the field but ignore the value
-- [ ] Add request serialization
   - convert `ChatRequest` to OpenAI-compatible messages
   - support text-only `system`, `developer`, `user`, `assistant`, and `tool`
     roles if they are already present in `Message`
   - keep tool-call serialization minimal or explicitly unsupported if it would
     expand the slice
-- [ ] Add stream adapter
   - convert raw streamed chunks to Dave `TextDelta`
+  - convert `reasoning_content` chunks seen in local Gemma/Qwen probes to Dave
+    `ReasoningDelta`
   - ignore empty/no-op chunks
-  - leave `ReasoningDelta` out unless it falls out naturally from the provider
-    payload shape
-- [ ] Map provider/SDK/network failures to `ProviderError`
+  - ignore role-only chunks, finish reasons, usage, and local `timings` metadata
+    until debug/trace work needs them
   - preserve a short useful error message for `ModelResponseFailed`
-- [ ] Add tests without real network
   - request serialization
   - stream adapter behavior
   - provider error mapping
+- [x] Tighten message modeling before closing the provider slice
+  - add Pydantic as a direct dependency
+  - replace the loose `Message(role=...)` dataclass with concrete message types
+    and a discriminated union
+  - make `ToolMessage` require `tool_call_id`
+  - keep assistant tool-call serialization explicitly unsupported for this slice
+  - map Dave message types to OpenAI message params in the provider adapter
+  - *dev comment* provider serialization exposed that the old one-class
+    `Message` shape allowed impossible states such as tool messages without
+    `tool_call_id`; when roles imply different required fields, model them as
+    distinct types instead of checking string roles at the boundary.
 - [ ] Add manual smoke instructions
   - documented command or snippet using explicit `base_url`, `api_key`, and
     model values

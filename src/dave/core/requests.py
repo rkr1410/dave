@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pydantic import BaseModel, ConfigDict
+
 from dave.core.messages import Message
 
 
-@dataclass
-class ChatRequest:
+class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     model: str
     messages: tuple[Message, ...]
 
