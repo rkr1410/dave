@@ -100,17 +100,92 @@ log from which the conversation can be materialized.
     model client/debug visibility work, so Epic 1 closes without this optional
     layer
 
-Out of scope (later epics): real OpenAI-compatible client (epic 2), disk
-storage (epic 5), UI (epic 6), tool execution (epic 7), interactive approval
-UX (epic 1 only proves the seam works), branching.
+Out of scope (later epics): real OpenAI-compatible client (epic 2), request/
+response debug visibility (epic 3), UI (epic 4), disk storage (epic 5), tool
+execution (epic 6), interactive approval UX (epic 1 only proves the seam works),
+branching.
 
-## Epic 2 notes
+## Epic 2: OpenAI-compatible provider MVP
+
+Goal: make the existing headless `Session` exchange streamed text with a real
+OpenAI-compatible endpoint. Keep the runtime UI-independent and keep the slice
+small: no tools, no persistent trace store, no debug panel, no provider registry.
+
+Exit criterion:
+
+```python
+session = Session(
+    model="gpt-4.1-mini",
+    provider=OpenAICompatibleProviderClient(
+        base_url="http://localhost:1234/v1",
+        api_key="dummy",
+    ),
+)
+
+async for event in session.submit_user_message("hello"):
+    ...
+```
+
+streams real `TextDelta` events and appends a real `AssistantMessageAppended`
+through the same core flow tested in Epic 1.
+
+### Decisions to record in code
+
+- Use an async OpenAI-compatible client, not a sync client wrapped in a worker
+  thread.
+- The provider boundary owns translation between Dave's `ChatRequest` /
+  `StreamEvent` types and SDK payloads.
+- `Session` stays provider-agnostic; no OpenAI-specific logic should leak into
+  core.
+- Configuration is explicit for this slice: pass `base_url`, `api_key`, and
+  model deliberately. Environment variable loading can come later.
+- Debug visibility must later use the same request/response objects that the
+  provider sends and receives; do not reconstruct debug data from unrelated SDK
+  internals.
+
+### Tasks
+
+- [ ] Add the OpenAI SDK dependency
+  - use the async client API
+- [ ] Add OpenAI-compatible provider client
+  - create from explicit constructor args
+  - require `base_url`
+  - accept optional `api_key`, with a harmless dummy default for local
+    OpenAI-compatible endpoints that require the field but ignore the value
+- [ ] Add request serialization
+  - convert `ChatRequest` to OpenAI-compatible messages
+  - support text-only `system`, `developer`, `user`, `assistant`, and `tool`
+    roles if they are already present in `Message`
+  - keep tool-call serialization minimal or explicitly unsupported if it would
+    expand the slice
+- [ ] Add stream adapter
+  - convert raw streamed chunks to Dave `TextDelta`
+  - ignore empty/no-op chunks
+  - leave `ReasoningDelta` out unless it falls out naturally from the provider
+    payload shape
+- [ ] Map provider/SDK/network failures to `ProviderError`
+  - preserve a short useful error message for `ModelResponseFailed`
+- [ ] Add tests without real network
+  - request serialization
+  - stream adapter behavior
+  - provider error mapping
+- [ ] Add manual smoke instructions
+  - documented command or snippet using explicit `base_url`, `api_key`, and
+    model values
+  - use a real configured OpenAI-compatible endpoint; do not replace this with
+    a mocked SDK integration test
+
+### Review questions
 
 - Decide whether provider-facing request/response/debug schemas should use
   Pydantic models instead of plain dataclasses.
 - Decide JSON argument validation/serialization for `ToolCall.arguments` at the
   provider boundary; avoid ad hoc frozen-json machinery in core unless the
   boundary actually needs it.
+- Decide how much OpenAI-compatible variance to tolerate in the MVP before it
+  becomes a provider compatibility project.
+- Decide when, if ever, to add environment variable loading such as
+  `OPENAI_API_KEY`, `OPENAI_BASE_URL`, or a default model.
 
 ## Open questions
 
