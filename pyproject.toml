@@ -6,7 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "dave-agent"
 version = "0.0.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "openai",
+]
 
 [project.scripts]
 dave = "dave.cli:main"

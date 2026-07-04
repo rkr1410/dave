@@ -145,7 +145,7 @@ through the same core flow tested in Epic 1.
 
 ### Tasks
 
-- [ ] Add the OpenAI SDK dependency
+- [x] Add the OpenAI SDK dependency
   - use the async client API
 - [ ] Add OpenAI-compatible provider client
   - create from explicit constructor args
