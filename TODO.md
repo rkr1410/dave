@@ -178,11 +178,14 @@ through the same core flow tested in Epic 1.
     `Message` shape allowed impossible states such as tool messages without
     `tool_call_id`; when roles imply different required fields, model them as
     distinct types instead of checking string roles at the boundary.
-- [ ] Add manual smoke instructions
-  - documented command or snippet using explicit `base_url`, `api_key`, and
-    model values
-  - use a real configured OpenAI-compatible endpoint; do not replace this with
-    a mocked SDK integration test
+- [x] Add real-provider smoke script
+  - add `tests/smoke/openai_compatible.py`
+  - add `tests/smoke/openai_compatible.toml` with explicit `base_url`,
+    `api_key`, and `prompt`
+  - auto-detect the model from `{base_url}/models`
+  - stream `Session.submit_user_message(...)` and print event types/content
+  - run manually against a configured OpenAI-compatible endpoint
+  - do not wire this into `unittest`
 
 ### Review questions
 

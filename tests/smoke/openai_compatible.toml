@@ -1,0 +1,3 @@
+base_url = "http://HAL-9000.local:8000/v1"
+api_key = "dummy"
+prompt = "The capital of France is"
