@@ -62,7 +62,7 @@ log from which the conversation can be materialized.
   - accepts `ChatRequest`
   - streams deterministic chunks
   - can simulate failure for tests
-- [ ] Implement `Session.submit_user_message()` happy path
+- [x] Implement `Session.submit_user_message()` happy path
   - append `UserMessageAppended`
   - materialize messages
   - build `ChatRequest`, emit `RequestBuilt`
@@ -74,6 +74,9 @@ log from which the conversation can be materialized.
   - emit `ModelResponseFinished`
   - append and yield `AssistantMessageAppended` (last event of the
     iteration — the durable-commit signal consumers refresh on)
+  - *dev comment* the approved request artifact is an in-memory
+    provider-neutral `ChatRequest` snapshot for now, not the final serialized
+    debug schema
 - [ ] Handle provider failure
   - append `ModelResponseFailed` with error/partial-output artifact refs
   - do not append a partial `AssistantMessageAppended`
@@ -121,6 +124,12 @@ UX (epic 1 only proves the seam works), branching.
 
 ## Later
 
+- Decide how large files or long pasted user text should enter model requests:
+  inline content, artifact-backed message parts, summaries, provider uploads, or
+  another representation.
+  - Consider artifact metadata/enrichment for large pasted text/files, e.g. an
+    async side pass that summarizes or classifies artifacts so users can later
+    refer to "the file with xyz".
 - Add optional install settings:
   - `DAVE_BIN_DIR`: directory for the global `dave` wrapper.
   - `DAVE_VENV_DIR`: virtualenv path.

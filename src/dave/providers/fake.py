@@ -7,10 +7,10 @@ from copy import deepcopy
 
 from dave.core.requests import ChatRequest
 from dave.core.stream_events import TextDelta
-from dave.providers.client import ProviderError
+from dave.providers.client import ProviderClient, ProviderError
 
 
-class FakeProviderClient:
+class FakeProviderClient(ProviderClient):
     def __init__(
         self,
         chunks: Iterable[str] = ("fake response",),
