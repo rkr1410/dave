@@ -83,7 +83,7 @@ log from which the conversation can be materialized.
     `TextDelta`
   - do not append a partial `AssistantMessageAppended`
   - yield `ModelResponseFailed` and end the generator normally
-- [ ] Add tests
+- [x] Add tests
   - happy path event order
   - message materialization
   - request is built before sent
@@ -93,8 +93,8 @@ log from which the conversation can be materialized.
     assistant message
   - failure does not append a partial assistant message
   - failure event carries refs that resolve in the artifact store
-  - event ids / parent ids are chained
-  - materializer ignores unknown event types
+  - *dev comment* covered with a small number of flow-style `unittest` cases
+    instead of narrow unit tests for each method
 - [ ] Wire CLI smoke command (optional; skip if it bloats the slice)
   - minimal hidden command runs one fake session and prints events
 
