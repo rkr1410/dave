@@ -95,8 +95,10 @@ log from which the conversation can be materialized.
   - failure event carries refs that resolve in the artifact store
   - *dev comment* covered with a small number of flow-style `unittest` cases
     instead of narrow unit tests for each method
-- [ ] Wire CLI smoke command (optional; skip if it bloats the slice)
-  - minimal hidden command runs one fake session and prints events
+- [x] Skip CLI smoke command
+  - *dev comment* fake-provider output would add little signal before the real
+    model client/debug visibility work, so Epic 1 closes without this optional
+    layer
 
 Out of scope (later epics): real OpenAI-compatible client (epic 2), disk
 storage (epic 5), UI (epic 6), tool execution (epic 7), interactive approval
