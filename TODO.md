@@ -290,6 +290,12 @@ Submitting text streams a model response through `Session.submit_user_message`.
   slice.
 - `ReasoningDelta` should be visible in the simplest useful way, but not as a
   separate debug panel.
+- Introduce a small UI presenter/transcript state between runtime events and
+  Textual widgets. It maps `SessionEvent`s to display state without deciding
+  that reasoning, cancellation, or streaming must always be a specific widget.
+- Name the first UI regions/components, such as `ConversationView`,
+  `PromptInput`, and `StatusBar`, but keep them as Textual widgets for now. Do
+  not create a full framework-neutral UI abstraction in this slice.
 
 ### Non-goals for this slice
 
@@ -306,23 +312,33 @@ Submitting text streams a model response through `Session.submit_user_message`.
 - [x] Add Textual dependency
   - update install flow if needed
   - verify `./install.sh` still installs a runnable `dave`
-- [ ] Define the initial UI shape
+- [x] Define the initial UI design shape
   - conversation/history area
   - bottom prompt input
   - minimal status/error line
+  - small presenter/transcript state between `SessionEvent`s and widgets
+  - named Textual widgets such as `ConversationView`, `PromptInput`, and
+    `StatusBar`
   - no separate debug pane in this slice
 - [ ] Add Textual app skeleton
   - keep it under a UI package, separate from runtime
   - wire it to an injectable `Session`
   - consume `UserMessageAppended`, `TextDelta`, `ReasoningDelta`,
     `ModelResponseFailed`, and `AssistantMessageAppended`
+- [ ] Add basic in-flight response cancellation
+  - keep input disabled while streaming, but keep a cancel shortcut available
+  - `Esc` stops the current model response
+  - cancellation does not roll back the submitted user message
+  - partial assistant/reasoning output may remain visible, clearly marked as
+    cancelled, but must not become a completed assistant message
+  - no interrupt-with-correction or prompt reopening in this slice
 - [ ] Wire `dave` to launch the MVP UI
   - keep `--version`
 - [ ] Add minimal provider selection
   - support fake provider for deterministic local startup
   - support explicit `--base-url`, `--model`, and optional `--api-key`
   - support optional `--system-prompt`
-  - block or queue input while a response is streaming; prefer blocking for MVP
+  - block input while a response is streaming; cancellation remains available
 - [ ] Add a manual smoke path
   - document the exact command to launch the UI
   - verify typing a prompt streams a response and leaves the app usable
@@ -361,6 +377,9 @@ enough to keep using while developing the next epics.
 - layout spacing and borders
 - user/assistant/reasoning presentation
 - input placeholder, focus, and disabled/streaming state
+- optional "reopen interrupted prompt" UX: cancel stream, restore the last user
+  text to input, and decide whether that is UI-only draft behavior or canonical
+  history edit/branching
 - status line and error rendering
 - scroll behavior during streaming
 - keyboard shortcuts such as quit/cancel/clear if they remain small
