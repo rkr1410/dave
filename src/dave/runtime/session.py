@@ -39,17 +39,34 @@ async def auto_approve(request: ModelRequest) -> Approve:
 class Session:
     def __init__(
         self,
-        model: str = "fake",
-        provider: ProviderClient | None = None,
+        model: str,
+        provider: ProviderClient,
         event_log: EventLog | None = None,
         artifact_store: InMemoryArtifactStore | None = None,
         approver: Approver | None = None,
     ) -> None:
         self.model = model
-        self.provider = provider or FakeProviderClient()
+        self.provider = provider
         self._event_log = event_log or EventLog()
         self._artifact_store = artifact_store or InMemoryArtifactStore()
         self.approver = approver or auto_approve
+
+    @classmethod
+    def fake(
+        cls,
+        model: str = "fake",
+        chunks: tuple[str, ...] = ("fake response",),
+        event_log: EventLog | None = None,
+        artifact_store: InMemoryArtifactStore | None = None,
+        approver: Approver | None = None,
+    ) -> Session:
+        return cls(
+            model=model,
+            provider=FakeProviderClient(chunks),
+            event_log=event_log,
+            artifact_store=artifact_store,
+            approver=approver,
+        )
 
     @property
     def events(self) -> tuple[Event, ...]:

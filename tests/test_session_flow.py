@@ -34,6 +34,12 @@ async def collect_events(session: Session) -> list[SessionEvent]:
 
 
 class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
+    def test_fake_factory_creates_explicit_fake_session(self) -> None:
+        session = Session.fake()
+
+        self.assertEqual(session.model, "fake")
+        self.assertIsInstance(session.provider, FakeProviderClient)
+
     async def test_happy_path_streams_and_materializes_conversation(self) -> None:
         artifact_store = InMemoryArtifactStore()
         provider = FakeProviderClient(("hello", " world"))
@@ -111,6 +117,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
         edit_store = InMemoryArtifactStore()
         edit_provider = FakeProviderClient(("ok",))
         edit_session = Session(
+            model="fake-model",
             provider=edit_provider,
             artifact_store=edit_store,
             approver=edit_request,
@@ -128,7 +135,11 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
             return Reject("no")
 
         reject_provider = FakeProviderClient(("should not stream",))
-        reject_session = Session(provider=reject_provider, approver=reject_request)
+        reject_session = Session(
+            model="fake-model",
+            provider=reject_provider,
+            approver=reject_request,
+        )
 
         reject_events = await collect_events(reject_session)
 
@@ -152,6 +163,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
             failure_message="boom before text",
         )
         before_text_session = Session(
+            model="fake-model",
             provider=before_text_provider,
             artifact_store=before_text_store,
         )
@@ -186,7 +198,11 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
             fail_after_chunks=1,
             failure_message="boom",
         )
-        session = Session(provider=provider, artifact_store=artifact_store)
+        session = Session(
+            model="fake-model",
+            provider=provider,
+            artifact_store=artifact_store,
+        )
 
         events = await collect_events(session)
 

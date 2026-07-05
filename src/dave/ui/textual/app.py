@@ -35,7 +35,7 @@ class DaveTextualApp(App[None]):
         presenter: ConversationPresenter | None = None,
     ) -> None:
         super().__init__()
-        self.session = session or Session()
+        self.session = session or Session.fake()
         self.presenter = presenter or ConversationPresenter()
 
     def compose(self) -> ComposeResult:

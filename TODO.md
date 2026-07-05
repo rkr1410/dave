@@ -283,7 +283,9 @@ Submitting text streams a model response through `Session.submit_user_message`.
 - The first screen is the usable chat surface, not a landing page.
 - The prompt input stays at the bottom; conversation output stays above it.
 - `dave` should launch the TUI by default. Keep `--version`.
-- Default provider is fake so `dave` works after install without hidden setup.
+- Default provider is fake so `dave` works after install without hidden setup,
+  but it should be chosen explicitly through `Session.fake()`, not hidden in
+  `Session()` defaults.
 - Real OpenAI-compatible provider is selected through explicit CLI flags such
   as `--base-url`, `--model`, and optional `--api-key`.
 - Configuration stays minimal. Do not add general config files or env loading
