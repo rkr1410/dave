@@ -15,6 +15,11 @@ class Event:
 
 
 @dataclass
+class SystemPromptSet(Event):
+    content: str
+
+
+@dataclass
 class UserMessageAppended(Event):
     content: str
 

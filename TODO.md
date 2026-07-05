@@ -245,13 +245,16 @@ and later UI work can show the real prompt Dave sends.
   - add a compact table for existing event names, family, meaning, and whether
     they are canonical
   - document that debug events expose inspectable runtime views, not raw HTTP
-- [ ] Add session system prompt support
+- [x] Add session system prompt support
   - add a canonical system-prompt event such as `SystemPromptSet`
   - expose a small session API for setting/replacing the active system prompt
   - prepend the active system prompt as the first `SystemMessage` in
     `build_request()`
   - keep the resulting system message visible in `RequestBuilt`,
     `DebugRequestReady`, and the approved request snapshot
+  - *dev comment* `DebugRequestReady` does not exist yet; this task makes the
+    system prompt visible in `RequestBuilt` and the approved request snapshot,
+    so the later debug event can reuse that request view.
 - [ ] Define debug stream events
   - add `DebugRequestReady`
   - add `DebugResponseReady`

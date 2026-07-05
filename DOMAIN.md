@@ -75,6 +75,7 @@ a data migration.
 
 Initial canonical events:
 
+- `SystemPromptSet`
 - `UserMessageAppended`
 - `RequestApproved`
 - `RequestRejected`
@@ -239,6 +240,7 @@ from dave.core.events import (
     RequestApproved,
     RequestRejected,
     ModelResponseFailed,
+    SystemPromptSet,
     ToolResultAppended,
     UserMessageAppended,
 )
@@ -257,7 +259,8 @@ from dave.core.requests import ChatRequest
 - The canonical event log stores semantic session events.
 - Trace/artifact storage stores raw evidence and large payloads.
 - An `ArtifactRef` used by a canonical event points to an immutable artifact.
-  Replay from canonical events must never depend on mutable external state.
+  Restoring Dave's session view from canonical events must never depend on
+  mutable external state.
 - `messages[]` is always a materialized view.
 - Debug visibility is built from the same request/response objects used by the
   runtime.

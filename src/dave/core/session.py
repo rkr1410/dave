@@ -13,6 +13,7 @@ from dave.core.events import (
     ModelResponseFailed,
     RequestApproved,
     RequestRejected,
+    SystemPromptSet,
     UserMessageAppended,
 )
 from dave.core.messages import materialize_messages
@@ -53,6 +54,9 @@ class Session:
     @property
     def events(self) -> tuple[Event, ...]:
         return self._event_log.events
+
+    def set_system_prompt(self, content: str) -> SystemPromptSet:
+        return self._event_log.append(SystemPromptSet(content))
 
     def build_request(self) -> ChatRequest:
         return ChatRequest(

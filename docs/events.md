@@ -20,6 +20,7 @@ raw HTTP or wire-level traces.
 
 | Event | Family | Canonical | Meaning |
 | --- | --- | --- | --- |
+| `SystemPromptSet` | canonical | yes | Active session system prompt was set or replaced. |
 | `UserMessageAppended` | canonical | yes | User text became durable session history. |
 | `RequestApproved` | canonical | yes | A candidate request was accepted for sending; payload lives behind an artifact ref. |
 | `RequestRejected` | canonical | yes | A candidate request was rejected and will not be sent. |

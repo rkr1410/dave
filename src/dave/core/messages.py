@@ -8,7 +8,12 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from dave.core.events import AssistantMessageAppended, Event, UserMessageAppended
+from dave.core.events import (
+    AssistantMessageAppended,
+    Event,
+    SystemPromptSet,
+    UserMessageAppended,
+)
 from dave.core.tool_calls import ToolCall
 
 class MessageModel(BaseModel):
@@ -50,16 +55,23 @@ Message = Annotated[
 
 def materialize_messages(events: Iterable[Event]) -> tuple[Message, ...]:
     messages: list[Message] = []
+    system_prompt: str | None = None
 
     for event in events:
-        if isinstance(event, UserMessageAppended):
-            messages.append(UserMessage(content=event.content))
-        elif isinstance(event, AssistantMessageAppended):
-            messages.append(
-                AssistantMessage(
-                    content=event.content,
-                    tool_calls=deepcopy(event.tool_calls),
+        match event:
+            case SystemPromptSet():
+                system_prompt = event.content
+            case UserMessageAppended():
+                messages.append(UserMessage(content=event.content))
+            case AssistantMessageAppended():
+                messages.append(
+                    AssistantMessage(
+                        content=event.content,
+                        tool_calls=deepcopy(event.tool_calls),
+                    )
                 )
-            )
 
-    return tuple(messages)
+    if system_prompt is None:
+        return tuple(messages)
+
+    return SystemMessage(content=system_prompt), *messages

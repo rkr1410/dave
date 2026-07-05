@@ -6,9 +6,15 @@ from dave.core.events import (
     ModelResponseFailed,
     RequestApproved,
     RequestRejected,
+    SystemPromptSet,
     UserMessageAppended,
 )
-from dave.core.messages import AssistantMessage, UserMessage, materialize_messages
+from dave.core.messages import (
+    AssistantMessage,
+    SystemMessage,
+    UserMessage,
+    materialize_messages,
+)
 from dave.core.requests import Approve, ChatRequest, Reject
 from dave.core.session import Session, SessionEvent
 from dave.core.stream_events import (
@@ -36,9 +42,11 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
             provider=provider,
             artifact_store=artifact_store,
         )
+        system_event = session.set_system_prompt("You are concise.")
 
         events = await collect_events(session)
 
+        self.assertIsInstance(system_event, SystemPromptSet)
         self.assertEqual(
             [type(event) for event in events],
             [
@@ -64,14 +72,28 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
             built_request,
             ChatRequest(
                 model="fake-model",
-                messages=(UserMessage(content="hello"),),
+                messages=(
+                    SystemMessage(content="You are concise."),
+                    UserMessage(content="hello"),
+                ),
             ),
         )
         self.assertEqual(artifact_store.get(approved_event.request_ref), sent_request)
         self.assertEqual(provider.requests, (sent_request,))
+        self.assertEqual(approved_event.message_count, 2)
+        self.assertEqual(
+            [type(event) for event in session.events],
+            [
+                SystemPromptSet,
+                UserMessageAppended,
+                RequestApproved,
+                AssistantMessageAppended,
+            ],
+        )
         self.assertEqual(
             materialize_messages(session.events),
             (
+                SystemMessage(content="You are concise."),
                 UserMessage(content="hello"),
                 AssistantMessage(content="hello world"),
             ),
