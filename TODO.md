@@ -269,7 +269,7 @@ the linear text conversation path.
 Exit criterion:
 
 ```bash
-dave
+dave --fake
 ```
 
 opens a Textual UI with conversation history above and a prompt input below.
@@ -282,10 +282,10 @@ Submitting text streams a model response through `Session.submit_user_message`.
   provider translation, or canonical history.
 - The first screen is the usable chat surface, not a landing page.
 - The prompt input stays at the bottom; conversation output stays above it.
-- `dave` should launch the TUI by default. Keep `--version`.
-- Default provider is fake so `dave` works after install without hidden setup,
-  but it should be chosen explicitly through `Session.fake()`, not hidden in
-  `Session()` defaults.
+- `dave` should launch the TUI after an explicit provider choice. Keep
+  `--version`.
+- `dave` should not silently start with the fake provider. Fake mode is useful
+  for tests and demos, but must be chosen explicitly with `--fake`.
 - Real OpenAI-compatible provider is selected through explicit CLI flags such
   as `--base-url`, `--model`, and optional `--api-key`.
 - Configuration stays minimal. Do not add general config files or env loading
@@ -333,11 +333,13 @@ Submitting text streams a model response through `Session.submit_user_message`.
     Textual widgets render that state.
 - [x] Wire `dave` to launch the MVP UI
   - keep `--version`
-- [ ] Add minimal provider selection
+- [x] Add minimal provider selection
   - support fake provider for deterministic local startup
   - support explicit `--base-url`, `--model`, and optional `--api-key`
   - support optional `--system-prompt`
   - block input while a response is streaming; cancellation remains available
+  - *dev comment* fake provider was moved from implicit CLI default to explicit
+    `--fake`, because a default fake chat looked like a working real setup.
 - [ ] Add basic in-flight response cancellation
   - keep input disabled while streaming, but keep a cancel shortcut available
   - `Esc` stops the current model response
