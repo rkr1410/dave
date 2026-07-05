@@ -303,7 +303,7 @@ Submitting text streams a model response through `Session.submit_user_message`.
 
 ### Tasks
 
-- [ ] Add Textual dependency
+- [x] Add Textual dependency
   - update install flow if needed
   - verify `./install.sh` still installs a runnable `dave`
 - [ ] Define the initial UI shape
