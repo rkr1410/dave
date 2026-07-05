@@ -1,29 +1,37 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable, Sequence
+from typing import Protocol
 
 from . import __version__
 
 
-def main() -> int:
+class RunnableApp(Protocol):
+    def run(self) -> object: ...
+
+
+AppFactory = Callable[[], RunnableApp]
+
+
+def main(argv: Sequence[str] | None = None, app_factory: AppFactory | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="dave",
-        description="Dave rewrite scaffold.",
+        description="Dave terminal agent workbench.",
     )
     parser.add_argument(
         "--version",
         action="version",
         version=f"dave {__version__}",
     )
-    args, extra = parser.parse_known_args()
+    parser.parse_args(argv)
 
-    if extra:
-        parser.error(
-            "this rewrite scaffold does not implement runtime options yet: "
-            + " ".join(extra)
-        )
+    if app_factory is None:
+        from dave.ui.textual import DaveTextualApp
 
-    print("Dave rewrite scaffold installed. Runtime implementation has not started yet.")
+        app_factory = DaveTextualApp
+
+    app_factory().run()
     return 0
 
 

@@ -331,7 +331,7 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - *dev comment* `DaveTextualApp` is the event listener/controller,
     `ConversationPresenter` maps runtime events to transcript state, and
     Textual widgets render that state.
-- [ ] Wire `dave` to launch the MVP UI
+- [x] Wire `dave` to launch the MVP UI
   - keep `--version`
 - [ ] Add minimal provider selection
   - support fake provider for deterministic local startup
