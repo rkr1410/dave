@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TypeVar
 
-from dave.core.events import Event
+from dave.runtime.events import Event
 
 EventT = TypeVar("EventT", bound=Event)
 

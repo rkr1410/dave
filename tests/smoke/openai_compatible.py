@@ -13,15 +13,15 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from dave.core.events import (
+from dave.runtime.events import (
     AssistantMessageAppended,
     ModelResponseFailed,
     RequestApproved,
     RequestRejected,
     UserMessageAppended,
 )
-from dave.core.session import Session, SessionEvent
-from dave.core.stream_events import (
+from dave.runtime.session import Session, SessionEvent
+from dave.runtime.stream_events import (
     ModelResponseFinished,
     ReasoningDelta,
     RequestBuilt,

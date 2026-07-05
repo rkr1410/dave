@@ -1,7 +1,7 @@
 import unittest
 
-from dave.core.artifacts import InMemoryArtifactStore
-from dave.core.events import (
+from dave.runtime.artifacts import InMemoryArtifactStore
+from dave.runtime.events import (
     AssistantMessageAppended,
     ModelResponseFailed,
     RequestApproved,
@@ -9,15 +9,15 @@ from dave.core.events import (
     SystemPromptSet,
     UserMessageAppended,
 )
-from dave.core.messages import (
+from dave.runtime.messages import (
     AssistantMessage,
     SystemMessage,
     UserMessage,
     materialize_messages,
 )
-from dave.core.requests import Approve, ModelRequest, Reject
-from dave.core.session import Session, SessionEvent
-from dave.core.stream_events import (
+from dave.runtime.requests import Approve, ModelRequest, Reject
+from dave.runtime.session import Session, SessionEvent
+from dave.runtime.stream_events import (
     ModelResponseFinished,
     RequestBuilt,
     RequestSent,

@@ -1,6 +1,6 @@
 # TODO
 
-## Epic 1: Core session runtime
+## Epic 1: Session runtime
 
 Goal: headless session runtime with fake model output, canonical events,
 stream events, and a real request approval boundary. No real provider, no disk
@@ -43,7 +43,7 @@ log from which the conversation can be materialized.
     `ModelResponseFinished`
   - other: `Message`, `ModelRequest`, `ArtifactRef`, `ToolCall`, `Approve`,
     `Reject`
-  - *dev comment* `ToolCall` lives in `core/tool_calls.py` so `messages.py` and `requests.py`
+  - *dev comment* `ToolCall` lives in `runtime/tool_calls.py` so `messages.py` and `requests.py`
     do not depend on each other.
 - [x] Add in-memory event log
   - append canonical events
@@ -101,9 +101,9 @@ log from which the conversation can be materialized.
     layer
 
 Out of scope (later epics): real OpenAI-compatible client (epic 2), request/
-response debug visibility (epic 3), UI (epic 4), disk storage (epic 5), tool
-execution (epic 6), interactive approval UX (epic 1 only proves the seam works),
-branching.
+prompt visibility foundations (epic 3), UI (epic 4), UI refinement (epic 5),
+disk storage (epic 6), tool execution (epic 7), interactive approval UX
+(epic 1 only proves the seam works), branching.
 
 ## Epic 2: OpenAI-compatible provider MVP
 
@@ -127,7 +127,7 @@ async for event in session.submit_user_message("hello"):
 ```
 
 streams real `TextDelta` events and appends a real `AssistantMessageAppended`
-through the same core flow tested in Epic 1.
+through the same runtime flow tested in Epic 1.
 
 ### Decisions to record in code
 
@@ -136,7 +136,7 @@ through the same core flow tested in Epic 1.
 - The provider boundary owns translation between Dave's `ModelRequest` /
   `StreamEvent` types and SDK payloads.
 - `Session` stays provider-agnostic; no OpenAI-specific logic should leak into
-  core.
+  runtime.
 - Configuration is explicit for this slice: pass `base_url`, `api_key`, and
   model deliberately. Environment variable loading can come later.
 - Debug visibility must later use the same request/response objects that the
@@ -192,7 +192,7 @@ through the same core flow tested in Epic 1.
 - Decide whether provider-facing request/response/debug schemas should use
   Pydantic models instead of plain dataclasses.
 - Decide JSON argument validation/serialization for `ToolCall.arguments` at the
-  provider boundary; avoid ad hoc frozen-json machinery in core unless the
+  provider boundary; avoid ad hoc frozen-json machinery in runtime unless the
   boundary actually needs it.
 - Decide how much OpenAI-compatible variance to tolerate in the MVP before it
   becomes a provider compatibility project.
@@ -260,11 +260,118 @@ and later wire-level tracing.
     runtime-ish debug objects; synthetic Session events would be a half-step
     unless/until we decide they are useful on their own.
 
+## Epic 4: Textual UI MVP
+
+Goal: make Dave usable as a small terminal chat UI over the existing headless
+`Session`. Keep runtime UI-independent and keep the first UI slice focused on
+the linear text conversation path.
+
+Exit criterion:
+
+```bash
+dave
+```
+
+opens a Textual UI with conversation history above and a prompt input below.
+Submitting text streams a model response through `Session.submit_user_message`.
+
+### Decisions to record in code/docs
+
+- Textual is the UI dependency for this slice.
+- The UI consumes `Session` events; it does not own message materialization,
+  provider translation, or canonical history.
+- The first screen is the usable chat surface, not a landing page.
+- The prompt input stays at the bottom; conversation output stays above it.
+- `dave` should launch the TUI by default. Keep `--version`.
+- Default provider is fake so `dave` works after install without hidden setup.
+- Real OpenAI-compatible provider is selected through explicit CLI flags such
+  as `--base-url`, `--model`, and optional `--api-key`.
+- Configuration stays minimal. Do not add config files or env loading in this
+  slice.
+- `ReasoningDelta` should be visible in the simplest useful way, but not as a
+  separate debug panel.
+
+### Non-goals for this slice
+
+- no tools or plugin UI
+- no raw request/response debug panel
+- no branching/history browser
+- no persistent session storage
+- no full settings system
+- no custom theme work beyond a readable default
+- no multi-prompt concurrency
+
+### Tasks
+
+- [ ] Add Textual dependency
+  - update install flow if needed
+  - verify `./install.sh` still installs a runnable `dave`
+- [ ] Define the initial UI shape
+  - conversation/history area
+  - bottom prompt input
+  - minimal status/error line
+  - no separate debug pane in this slice
+- [ ] Add Textual app skeleton
+  - keep it under a UI package, separate from runtime
+  - wire it to an injectable `Session`
+  - consume `UserMessageAppended`, `TextDelta`, `ReasoningDelta`,
+    `ModelResponseFailed`, and `AssistantMessageAppended`
+- [ ] Wire `dave` to launch the MVP UI
+  - keep `--version`
+- [ ] Add minimal provider selection
+  - support fake provider for deterministic local startup
+  - support explicit `--base-url`, `--model`, and optional `--api-key`
+  - support optional `--system-prompt`
+  - block or queue input while a response is streaming; prefer blocking for MVP
+- [ ] Add a manual smoke path
+  - document the exact command to launch the UI
+  - verify typing a prompt streams a response and leaves the app usable
+- [ ] Add focused tests only where they carry signal
+  - prefer testing UI/session glue over widget internals
+  - avoid brittle layout assertions in this first slice
+
+## Epic 5: Textual UI refinement
+
+Goal: spend a short, feedback-driven pass making the first Textual UI pleasant
+to use before moving on to storage/tools/plugins. This epic is allowed to be
+more manual and iterative than the runtime/provider slices.
+
+Exit criterion: the MVP UI still does the same simple chat job, but feels good
+enough to keep using while developing the next epics.
+
+### Decisions to record in code/docs
+
+- Refinement should improve the existing chat surface, not expand product
+  scope.
+- Prefer small visual/layout iterations over introducing a full theme/config
+  system.
+- If visual tuning becomes repetitive or hard-coded, split out a later theme
+  configuration spike.
+
+### Non-goals for this slice
+
+- no tools or plugin UI
+- no raw request/response debug panel
+- no persistent session storage
+- no branching/history browser
+- no broad config system
+
+### Candidate refinement areas
+
+- layout spacing and borders
+- user/assistant/reasoning presentation
+- input placeholder, focus, and disabled/streaming state
+- status line and error rendering
+- scroll behavior during streaming
+- keyboard shortcuts such as quit/cancel/clear if they remain small
+- color palette and readability
+- screenshot/manual review loop
+
 ## Open questions
 
 - How much pluggability do we want? Allow user extensions to emit events
   that e.g. the artifact store should be aware of? How much is too much (e.g.
-  if the core loses full control of messages[] materialization, we lose debug/branching/compatibility
+  if the runtime loses full control of messages[] materialization, we lose debug/branching/compatibility
   without the exact plugin versions)
 
 ## Soon after Epic 1

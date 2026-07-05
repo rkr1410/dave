@@ -212,7 +212,7 @@ The package layout should make the event boundary obvious:
 
 ```text
 dave/
-  core/
+  runtime/
     session.py
     event_log.py
     events.py
@@ -236,7 +236,7 @@ outside `providers/` may import a provider SDK. The name is deliberately not
 Example imports:
 
 ```python
-from dave.core.events import (
+from dave.runtime.events import (
     AssistantMessageAppended,
     RequestApproved,
     RequestRejected,
@@ -245,14 +245,14 @@ from dave.core.events import (
     ToolResultAppended,
     UserMessageAppended,
 )
-from dave.core.stream_events import (
+from dave.runtime.stream_events import (
     ReasoningDelta,
     RequestBuilt,
     RequestSent,
     ModelResponseFinished,
     TextDelta,
 )
-from dave.core.requests import ModelRequest
+from dave.runtime.requests import ModelRequest
 ```
 
 ## Invariants

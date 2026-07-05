@@ -8,13 +8,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from dave.core.events import (
+from dave.runtime.events import (
     AssistantMessageAppended,
     Event,
     SystemPromptSet,
     UserMessageAppended,
 )
-from dave.core.tool_calls import ToolCall
+from dave.runtime.tool_calls import ToolCall
 
 class MessageModel(BaseModel):
     model_config = ConfigDict(extra="forbid")

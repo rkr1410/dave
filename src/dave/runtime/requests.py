@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict
 
-from dave.core.messages import Message
+from dave.runtime.messages import Message
 
 
 class ModelRequest(BaseModel):

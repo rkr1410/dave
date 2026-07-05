@@ -16,7 +16,7 @@ from openai.types.chat import (
     ChatCompletionUserMessageParam,
 )
 
-from dave.core.messages import (
+from dave.runtime.messages import (
     AssistantMessage,
     DeveloperMessage,
     Message,
@@ -24,8 +24,8 @@ from dave.core.messages import (
     ToolMessage,
     UserMessage,
 )
-from dave.core.requests import ModelRequest
-from dave.core.stream_events import ReasoningDelta, StreamEvent, TextDelta
+from dave.runtime.requests import ModelRequest
+from dave.runtime.stream_events import ReasoningDelta, StreamEvent, TextDelta
 from dave.providers.client import ProviderClient, ProviderError
 
 DEFAULT_API_KEY = "dummy"

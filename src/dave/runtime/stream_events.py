@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from dave.core.requests import ModelRequest
+from dave.runtime.requests import ModelRequest
 
 
 @dataclass

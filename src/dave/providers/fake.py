@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterable
 from copy import deepcopy
 
-from dave.core.requests import ModelRequest
-from dave.core.stream_events import TextDelta
+from dave.runtime.requests import ModelRequest
+from dave.runtime.stream_events import TextDelta
 from dave.providers.client import ProviderClient, ProviderError
 
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from dave.core.artifacts import ArtifactRef
-from dave.core.tool_calls import ToolCall
+from dave.runtime.artifacts import ArtifactRef
+from dave.runtime.tool_calls import ToolCall
 
 
 @dataclass(kw_only=True)

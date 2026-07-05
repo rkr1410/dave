@@ -7,9 +7,9 @@ from openai.types.chat.chat_completion_chunk import (
     ChoiceDeltaToolCall,
 )
 
-from dave.core.messages import UserMessage
-from dave.core.requests import ModelRequest
-from dave.core.stream_events import ReasoningDelta, TextDelta
+from dave.runtime.messages import UserMessage
+from dave.runtime.requests import ModelRequest
+from dave.runtime.stream_events import ReasoningDelta, TextDelta
 from dave.providers.client import ProviderError
 from dave.providers.openai_compatible import (
     OpenAICompatibleProviderClient,

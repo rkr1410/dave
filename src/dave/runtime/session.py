@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Awaitable, Callable
 from copy import deepcopy
 
-from dave.core.artifacts import InMemoryArtifactStore
-from dave.core.event_log import EventLog
-from dave.core.events import (
+from dave.runtime.artifacts import InMemoryArtifactStore
+from dave.runtime.event_log import EventLog
+from dave.runtime.events import (
     AssistantMessageAppended,
     Event,
     ModelResponseFailed,
@@ -16,9 +16,9 @@ from dave.core.events import (
     SystemPromptSet,
     UserMessageAppended,
 )
-from dave.core.messages import materialize_messages
-from dave.core.requests import Approve, ModelRequest, Reject
-from dave.core.stream_events import (
+from dave.runtime.messages import materialize_messages
+from dave.runtime.requests import Approve, ModelRequest, Reject
+from dave.runtime.stream_events import (
     ModelResponseFinished,
     RequestBuilt,
     RequestSent,

@@ -16,14 +16,15 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 2. OpenAI-compatible provider MVP
 3. Request/prompt visibility foundations
 4. Textual UI MVP
-5. Persistent event/trace/artifact storage
-6. Tool registry and tool execution
-7. Plugin and hook system
-8. Context compaction
-9. Conversation branching
-10. Multi-agent sessions
-11. Workflow/state graph
-12. Extension documentation
+5. Textual UI refinement
+6. Persistent event/trace/artifact storage
+7. Tool registry and tool execution
+8. Plugin and hook system
+9. Context compaction
+10. Conversation branching
+11. Multi-agent sessions
+12. Workflow/state graph
+13. Extension documentation
 
 ## Notes
 
@@ -34,7 +35,7 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 - Epic 1 includes the first in-memory event log, message materialization, and
   artifact store. Later storage work means persistence and richer trace/debug
   data, not inventing those concepts from scratch.
-- Core must stay independent from UI.
+- Runtime must stay independent from UI.
 - `messages[]` should be a materialized view, not the source of truth.
 - Session-level input shaping, such as the active system prompt, is semantic
   session/branch state and must be visible in built/approved requests.
@@ -47,8 +48,10 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 - `build_request()` and `send_request()` should be separate operations from the start.
 - Canonical event log means semantic session events.
 - Trace/artifacts means raw payloads, chunks, requests, responses, and large tool outputs.
-- Plugins should intercept behavior without coupling core to Textual.
+- Plugins should intercept behavior without coupling runtime to Textual.
 - First implementation slice should be headless.
 - The tool loop *shape* is sketched in `DOMAIN.md` before the UI epic, but tool
-  execution stays in epic 6. The UI MVP targets the linear happy path
+  execution stays in epic 7. The UI MVP targets the linear happy path
   (send text -> model response) without contradicting the loop shape.
+- Textual UI refinement is intentionally separate from the UI MVP so the first
+  usable interface can be polished before moving into storage/tools/plugins.
