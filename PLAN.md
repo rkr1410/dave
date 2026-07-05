@@ -36,6 +36,8 @@ see, shape, debug, and extend. Every important decision should be inspectable an
   data, not inventing those concepts from scratch.
 - Core must stay independent from UI.
 - `messages[]` should be a materialized view, not the source of truth.
+- Session-level input shaping, such as the active system prompt, is semantic
+  session/branch state and must be visible in built/approved requests.
 - Early debug means raw request/response visibility, not the full trace system.
 - Debug visibility should be built from the same request/response objects used by the runtime, not reconstructed from SDK internals.
 - `build_request()` and `send_request()` should be separate operations from the start.

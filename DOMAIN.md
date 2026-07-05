@@ -34,8 +34,8 @@ Examples:
 - Raw SDK payloads, raw chunks, serialized requests, serialized responses, and
   large tool outputs belong in trace/artifact storage.
 
-`TextDelta` does not need to be replayable. Replay should be able to rebuild the
-conversation from semantic events such as `AssistantMessageAppended`.
+`TextDelta` does not need to be durable. Dave should be able to rebuild the
+conversation view from semantic events such as `AssistantMessageAppended`.
 
 ## Core types
 
@@ -65,8 +65,8 @@ future.
 
 `Event`
 
-A durable semantic state change. Events are the source of truth for replay and
-message materialization.
+A durable semantic state change. Events are the source of truth for message
+materialization, branching, audit, and restoring Dave's session view.
 
 Every event has its own `id` and a `parent_id` pointing at the event it follows.
 A linear session is just the degenerate case where every event has one child.
@@ -95,7 +95,8 @@ debug visibility; debug views must not reconstruct requests from SDK internals.
 `StreamEvent`
 
 A live execution signal emitted by the runtime for UI, CLI, and debug consumers.
-Stream events are not necessarily durable or replayable.
+Stream events are not necessarily durable and should not be required to restore
+the session view.
 
 Initial stream events:
 
@@ -133,7 +134,7 @@ real boundary so a future UI, user, or plugin can approve, reject, or edit the
 request before it is sent.
 
 `RequestApproved` is the canonical event that records the approved request. It
-is the right replay point for "what request was allowed to be sent".
+is the durable audit point for "what request was allowed to be sent".
 
 The approved request payload is the whole conversation, so it belongs in
 artifact storage per the invariants below. `RequestApproved` carries an
@@ -141,9 +142,10 @@ artifact storage per the invariants below. `RequestApproved` carries an
 count), not the payload itself.
 
 `RequestRejected` is the canonical event for the other outcome of the boundary.
-`ModelResponseFailed` records a send or stream failure, so replay can explain why an
-approved request has no assistant message. A stream aborted mid-response must
-not produce a partial `AssistantMessageAppended`. The evidence is not lost:
+`ModelResponseFailed` records a send or stream failure, so the session view can
+explain why an approved request has no assistant message. A stream aborted
+mid-response must not produce a partial `AssistantMessageAppended`. The evidence
+is not lost:
 `ModelResponseFailed` carries `ArtifactRef`s to the error details and to whatever
 partial stream output exists in trace storage, so failed responses stay
 inspectable.

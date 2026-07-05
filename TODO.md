@@ -199,22 +199,110 @@ through the same core flow tested in Epic 1.
 - Decide when, if ever, to add environment variable loading such as
   `OPENAI_API_KEY`, `OPENAI_BASE_URL`, or a default model.
 
+## Epic 3: Request/response debug visibility
+
+Goal: expose headless debug visibility for the request Dave is about to send
+and the response Dave received/adapted, without adding UI, persistent trace
+storage, raw provider chunk events, or wire-level HTTP tracing.
+
+Exit criterion:
+
+```python
+async for event in session.submit_user_message("hello"):
+    ...
+```
+
+emits debug stream events that let a caller inspect request-ish and
+response-ish runtime views in the same flow as `TextDelta` / `ReasoningDelta`.
+This slice should also close the immediate system-prompt gap so debug output
+and later UI work can show the real prompt Dave sends.
+
+### Decisions to record in code/docs
+
+- System prompt is session/branch state, not something the UI should manually
+  prepend on every submit. Add a canonical event such as `SystemPromptSet`, and
+  have `build_request()` prepend the active `SystemMessage` when one is set.
+- `DebugRequestReady` and `DebugResponseReady` are stream/debug events, not
+  canonical events.
+- Debug visibility shows Dave/runtime-level views, not raw network truth.
+- `DebugRequestReady` should be built from the same `ChatRequest` and provider
+  call payload used by the runtime, not reconstructed from SDK internals.
+- `DebugResponseReady` should be built while processing the same stream that
+  emits `TextDelta` / `ReasoningDelta`.
+- Do not emit raw provider chunk events in this MVP. If we later need serious
+  wire-level tracing, treat that as a separate trace/proxy/HTTP-hooks project.
+- Canonical event log remains semantic session history only.
+- Request-local developer messages are a future idea, not part of this slice:
+  later request modifiers/hooks may inject them after `RequestBuilt` and before
+  `RequestApproved`, and the accepted `ChatRequest` snapshot should preserve
+  whatever was finally sent.
+
+### Tasks
+
+- [x] Start event documentation
+  - add `docs/events.md`
+  - describe event families: canonical events, stream events, debug events
+  - add a compact table for existing event names, family, meaning, and whether
+    they are canonical
+  - document that debug events expose inspectable runtime views, not raw HTTP
+- [ ] Add session system prompt support
+  - add a canonical system-prompt event such as `SystemPromptSet`
+  - expose a small session API for setting/replacing the active system prompt
+  - prepend the active system prompt as the first `SystemMessage` in
+    `build_request()`
+  - keep the resulting system message visible in `RequestBuilt`,
+    `DebugRequestReady`, and the approved request snapshot
+- [ ] Define debug stream events
+  - add `DebugRequestReady`
+  - add `DebugResponseReady`
+  - keep payload shape small and artifact-friendly so large debug data can move
+    behind `ArtifactRef`
+- [ ] Emit request debug view
+  - keep `RequestBuilt` as Dave's editable `ChatRequest` boundary
+  - build provider call payload once and use that same object for both
+    `DebugRequestReady` and the SDK/provider call
+  - avoid reconstructing debug request data after the fact
+- [ ] Emit response debug view
+  - accumulate response/debug data while adapting provider stream events
+  - emit `DebugResponseReady` after streaming finishes
+  - include reasoning/text data at the runtime-debug level, not raw chunks
+- [ ] Keep provider chunks out of the public stream
+  - do not add `ProviderChunkReceived` in this slice
+  - keep live UI-facing output as `TextDelta` / `ReasoningDelta`
+- [ ] Add broad flow coverage
+  - prove the normal session flow emits request debug, semantic deltas, response
+    debug, and the final canonical assistant commit in sensible order
+  - prove debug events do not enter the canonical event log
+- [ ] Update smoke visibility
+  - make the real-provider smoke script show the new debug events in a concise
+    way
+
 ## Open questions
 
 - How much pluggability do we want? Allow user extensions to emit events
   that e.g. the artifact store should be aware of? How much is too much (e.g.
-  if the core loses ful control of messages[] materialization, we lose debug/replay/compatibilty
+  if the core loses full control of messages[] materialization, we lose debug/branching/compatibility
   without the exact plugin versions)
 
 ## Soon after Epic 1
 
-- If first real use shows that Dave needs a system/developer prompt and simple
-  `list_files` / `read_file` tool calls to be useful, add a small spike for the
+- If first real use shows that Dave needs simple `list_files` / `read_file`
+  tool calls to be useful, add a small spike for the
   cheapest coherent path: enough to work, without falling into the full tool
   registry/plugin implementation.
 
 ## Later
 
+- Define history/read API semantics:
+  - reading historical events is read-only
+  - tool execution and other side effects happen only in live runtime flows
+  - do not design full event-sourcing/idempotent side-effect replay unless it
+    becomes a real requirement
+- Explore request-local developer messages as a request modification mechanism:
+  a future hook/plugin could inspect `RequestBuilt`, inject a `DeveloperMessage`
+  before `RequestApproved`, and let `RequestApproved` / `DebugRequestReady`
+  record the final accepted `ChatRequest` without making the developer message
+  durable session history.
 - Decide how large files or long pasted user text should enter model requests:
   inline content, artifact-backed message parts, summaries, provider uploads, or
   another representation.
