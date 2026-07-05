@@ -17,7 +17,7 @@ from dave.core.events import (
     UserMessageAppended,
 )
 from dave.core.messages import materialize_messages
-from dave.core.requests import Approve, ChatRequest, Reject
+from dave.core.requests import Approve, ModelRequest, Reject
 from dave.core.stream_events import (
     ModelResponseFinished,
     RequestBuilt,
@@ -28,11 +28,11 @@ from dave.core.stream_events import (
 from dave.providers.client import ProviderClient, ProviderError
 from dave.providers.fake import FakeProviderClient
 
-Approver = Callable[[ChatRequest], Awaitable[Approve | Reject]]
+Approver = Callable[[ModelRequest], Awaitable[Approve | Reject]]
 SessionEvent = Event | StreamEvent
 
 
-async def auto_approve(request: ChatRequest) -> Approve:
+async def auto_approve(request: ModelRequest) -> Approve:
     return Approve(request)
 
 
@@ -58,13 +58,13 @@ class Session:
     def set_system_prompt(self, content: str) -> SystemPromptSet:
         return self._event_log.append(SystemPromptSet(content))
 
-    def build_request(self) -> ChatRequest:
-        return ChatRequest(
+    def build_request(self) -> ModelRequest:
+        return ModelRequest(
             model=self.model,
             messages=materialize_messages(self._event_log.events),
         )
 
-    def send_request(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
+    def send_request(self, request: ModelRequest) -> AsyncIterator[StreamEvent]:
         return self.provider.stream(request)
 
     async def submit_user_message(self, text: str) -> AsyncIterator[SessionEvent]:

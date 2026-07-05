@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from dave.core.requests import ChatRequest
+from dave.core.requests import ModelRequest
 
 
 @dataclass
@@ -14,12 +14,12 @@ class StreamEvent:
 
 @dataclass
 class RequestBuilt(StreamEvent):
-    request: ChatRequest
+    request: ModelRequest
 
 
 @dataclass
 class RequestSent(StreamEvent):
-    request: ChatRequest
+    request: ModelRequest
 
 
 @dataclass

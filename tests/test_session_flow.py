@@ -15,7 +15,7 @@ from dave.core.messages import (
     UserMessage,
     materialize_messages,
 )
-from dave.core.requests import Approve, ChatRequest, Reject
+from dave.core.requests import Approve, ModelRequest, Reject
 from dave.core.session import Session, SessionEvent
 from dave.core.stream_events import (
     ModelResponseFinished,
@@ -70,7 +70,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             built_request,
-            ChatRequest(
+            ModelRequest(
                 model="fake-model",
                 messages=(
                     SystemMessage(content="You are concise."),
@@ -100,12 +100,12 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_approval_boundary_can_edit_or_reject_request(self) -> None:
-        edited_request = ChatRequest(
+        edited_request = ModelRequest(
             model="edited-model",
             messages=(UserMessage(content="edited"),),
         )
 
-        async def edit_request(request: ChatRequest) -> Approve:
+        async def edit_request(request: ModelRequest) -> Approve:
             return Approve(edited_request)
 
         edit_store = InMemoryArtifactStore()
@@ -124,7 +124,7 @@ class SessionFlowTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(edit_provider.requests, (edited_request,))
         self.assertEqual(edit_store.get(edit_events[2].request_ref), edited_request)
 
-        async def reject_request(request: ChatRequest) -> Reject:
+        async def reject_request(request: ModelRequest) -> Reject:
             return Reject("no")
 
         reject_provider = FakeProviderClient(("should not stream",))

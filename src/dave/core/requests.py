@@ -1,4 +1,4 @@
-"""Provider-neutral chat request primitives."""
+"""Provider-neutral model request primitives."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from dave.core.messages import Message
 
 
-class ChatRequest(BaseModel):
+class ModelRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     model: str
@@ -18,7 +18,7 @@ class ChatRequest(BaseModel):
 
 @dataclass
 class Approve:
-    request: ChatRequest
+    request: ModelRequest
 
 
 @dataclass

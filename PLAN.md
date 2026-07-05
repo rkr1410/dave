@@ -14,7 +14,7 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 0. Domain model spike
 1. Headless session runtime MVP
 2. OpenAI-compatible provider MVP
-3. Request/response debug visibility
+3. Request/prompt visibility foundations
 4. Textual UI MVP
 5. Persistent event/trace/artifact storage
 6. Tool registry and tool execution
@@ -28,7 +28,7 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 ## Notes
 
 - Domain model spike should settle initial shapes for `Session`, `Branch`, `Event`,
-  `Message`, `ChatRequest`, `StreamEvent`, `ToolCall`, and `ArtifactRef`.
+  `Message`, `ModelRequest`, `StreamEvent`, `ToolCall`, and `ArtifactRef`.
   Current spike output lives in `DOMAIN.md`.
 - Epics are ordered by intended implementation sequence.
 - Epic 1 includes the first in-memory event log, message materialization, and
@@ -38,8 +38,12 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 - `messages[]` should be a materialized view, not the source of truth.
 - Session-level input shaping, such as the active system prompt, is semantic
   session/branch state and must be visible in built/approved requests.
-- Early debug means raw request/response visibility, not the full trace system.
-- Debug visibility should be built from the same request/response objects used by the runtime, not reconstructed from SDK internals.
+- Raw request/response wire visibility is deferred. Session-level runtime
+  events can expose useful views later, but exact network truth likely needs a
+  proxy/HTTP-hooks tracing feature.
+- Any future runtime debug visibility should be built from the same
+  request/response objects used by the runtime, not reconstructed from SDK
+  internals.
 - `build_request()` and `send_request()` should be separate operations from the start.
 - Canonical event log means semantic session events.
 - Trace/artifacts means raw payloads, chunks, requests, responses, and large tool outputs.

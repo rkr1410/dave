@@ -88,10 +88,11 @@ Initial canonical events:
 A materialized view used to build model requests and display conversation state.
 Messages are derived from canonical events; they are not the source of truth.
 
-`ChatRequest`
+`ModelRequest`
 
 Dave's provider-neutral request object. It is the object used by the runtime and
-debug visibility; debug views must not reconstruct requests from SDK internals.
+any future runtime-level debug view should reuse it rather than reconstructing
+requests from SDK internals.
 
 `StreamEvent`
 
@@ -126,7 +127,7 @@ raw requests, raw responses, raw chunks, and large tool outputs.
 `build_request()` and `send_request()` should be separate operations from the
 start.
 
-`build_request()` creates a candidate `ChatRequest` from materialized messages
+`build_request()` creates a candidate `ModelRequest` from materialized messages
 and emits `RequestBuilt`.
 
 The inspect/edit boundary happens after `RequestBuilt` and before
@@ -226,7 +227,7 @@ dave/
     stream_adapter.py
 ```
 
-`providers/` holds everything provider-specific: translating `ChatRequest` to a
+`providers/` holds everything provider-specific: translating `ModelRequest` to a
 concrete SDK and translating provider chunks to neutral `StreamEvent`s. Nothing
 outside `providers/` may import a provider SDK. The name is deliberately not
 `model/` (overloaded with "domain model" and "which LLM") and not `transport/`
@@ -251,7 +252,7 @@ from dave.core.stream_events import (
     ModelResponseFinished,
     TextDelta,
 )
-from dave.core.requests import ChatRequest
+from dave.core.requests import ModelRequest
 ```
 
 ## Invariants
@@ -262,6 +263,6 @@ from dave.core.requests import ChatRequest
   Restoring Dave's session view from canonical events must never depend on
   mutable external state.
 - `messages[]` is always a materialized view.
-- Debug visibility is built from the same request/response objects used by the
-  runtime.
+- Any future runtime-level debug visibility is built from the same
+  request/response objects used by the runtime.
 - Every important decision should be inspectable and overridable.

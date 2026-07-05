@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterable
 from copy import deepcopy
 
-from dave.core.requests import ChatRequest
+from dave.core.requests import ModelRequest
 from dave.core.stream_events import TextDelta
 from dave.providers.client import ProviderClient, ProviderError
 
@@ -23,13 +23,13 @@ class FakeProviderClient(ProviderClient):
         self.chunks = tuple(chunks)
         self.fail_after_chunks = fail_after_chunks
         self.failure_message = failure_message
-        self._requests: list[ChatRequest] = []
+        self._requests: list[ModelRequest] = []
 
     @property
-    def requests(self) -> tuple[ChatRequest, ...]:
+    def requests(self) -> tuple[ModelRequest, ...]:
         return tuple(deepcopy(request) for request in self._requests)
 
-    async def stream(self, request: ChatRequest) -> AsyncIterator[TextDelta]:
+    async def stream(self, request: ModelRequest) -> AsyncIterator[TextDelta]:
         self._requests.append(deepcopy(request))
 
         yielded = 0

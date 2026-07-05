@@ -28,7 +28,7 @@ log from which the conversation can be materialized.
   event — there is no separate failure stream event. Exceptions are for bugs,
   not for domain-level failures.
 - The approval boundary is an injectable approver (async callable
-  `ChatRequest -> Approve(request) | Reject(reason)`), defaulting to
+  `ModelRequest -> Approve(request) | Reject(reason)`), defaulting to
   auto-approve. Approve may carry an edited request. It is a seam, not an
   inline shortcut.
 
@@ -41,7 +41,7 @@ log from which the conversation can be materialized.
     `AssistantMessageAppended`, `ToolResultAppended`, `ModelResponseFailed`
   - stream: `RequestBuilt`, `RequestSent`, `TextDelta`, `ReasoningDelta`,
     `ModelResponseFinished`
-  - other: `Message`, `ChatRequest`, `ArtifactRef`, `ToolCall`, `Approve`,
+  - other: `Message`, `ModelRequest`, `ArtifactRef`, `ToolCall`, `Approve`,
     `Reject`
   - *dev comment* `ToolCall` lives in `core/tool_calls.py` so `messages.py` and `requests.py`
     do not depend on each other.
@@ -59,13 +59,13 @@ log from which the conversation can be materialized.
   - ignore event types the materializer does not know (not just
     `RequestApproved`) so future canonical events don't break it
 - [x] Add fake provider client
-  - accepts `ChatRequest`
+  - accepts `ModelRequest`
   - streams deterministic chunks
   - can simulate failure for tests
 - [x] Implement `Session.submit_user_message()` happy path
   - append `UserMessageAppended`
   - materialize messages
-  - build `ChatRequest`, emit `RequestBuilt`
+  - build `ModelRequest`, emit `RequestBuilt`
   - call the approver (default auto-approve), append `RequestApproved`
   - on reject: append `RequestRejected`, yield it, end the generator —
     nothing is sent
@@ -75,7 +75,7 @@ log from which the conversation can be materialized.
   - append and yield `AssistantMessageAppended` (last event of the
     iteration — the durable-commit signal consumers refresh on)
   - *dev comment* the approved request artifact is an in-memory
-    provider-neutral `ChatRequest` snapshot for now, not the final serialized
+    provider-neutral `ModelRequest` snapshot for now, not the final serialized
     debug schema
 - [x] Handle provider failure
   - append `ModelResponseFailed` with error/partial-output artifact refs
@@ -133,7 +133,7 @@ through the same core flow tested in Epic 1.
 
 - Use an async OpenAI-compatible client, not a sync client wrapped in a worker
   thread.
-- The provider boundary owns translation between Dave's `ChatRequest` /
+- The provider boundary owns translation between Dave's `ModelRequest` /
   `StreamEvent` types and SDK payloads.
 - `Session` stays provider-agnostic; no OpenAI-specific logic should leak into
   core.
@@ -152,7 +152,7 @@ through the same core flow tested in Epic 1.
   - require `base_url`
   - accept optional `api_key`, with a harmless dummy default for local
     OpenAI-compatible endpoints that require the field but ignore the value
-  - convert `ChatRequest` to OpenAI-compatible messages
+  - convert `ModelRequest` to OpenAI-compatible messages
   - support text-only `system`, `developer`, `user`, `assistant`, and `tool`
     roles if they are already present in `Message`
   - keep tool-call serialization minimal or explicitly unsupported if it would
@@ -199,11 +199,11 @@ through the same core flow tested in Epic 1.
 - Decide when, if ever, to add environment variable loading such as
   `OPENAI_API_KEY`, `OPENAI_BASE_URL`, or a default model.
 
-## Epic 3: Request/response debug visibility
+## Epic 3: Request/prompt visibility foundations
 
-Goal: expose headless debug visibility for the request Dave is about to send
-and the response Dave received/adapted, without adding UI, persistent trace
-storage, raw provider chunk events, or wire-level HTTP tracing.
+Goal: keep the early request path inspectable enough for headless/UI work by
+documenting event families and closing the immediate system-prompt gap.
+Do not add request/response debug events in this slice.
 
 Exit criterion:
 
@@ -212,29 +212,28 @@ async for event in session.submit_user_message("hello"):
     ...
 ```
 
-emits debug stream events that let a caller inspect request-ish and
-response-ish runtime views in the same flow as `TextDelta` / `ReasoningDelta`.
-This slice should also close the immediate system-prompt gap so debug output
-and later UI work can show the real prompt Dave sends.
+includes the active system prompt in built/approved request snapshots. Event
+docs explain the current event families and the boundary between runtime views
+and later wire-level tracing.
 
 ### Decisions to record in code/docs
 
 - System prompt is session/branch state, not something the UI should manually
   prepend on every submit. Add a canonical event such as `SystemPromptSet`, and
   have `build_request()` prepend the active `SystemMessage` when one is set.
-- `DebugRequestReady` and `DebugResponseReady` are stream/debug events, not
-  canonical events.
-- Debug visibility shows Dave/runtime-level views, not raw network truth.
-- `DebugRequestReady` should be built from the same `ChatRequest` and provider
-  call payload used by the runtime, not reconstructed from SDK internals.
-- `DebugResponseReady` should be built while processing the same stream that
-  emits `TextDelta` / `ReasoningDelta`.
-- Do not emit raw provider chunk events in this MVP. If we later need serious
-  wire-level tracing, treat that as a separate trace/proxy/HTTP-hooks project.
+- Runtime-level debug events are deferred. Names like `DebugRequestReady` and
+  `DebugResponseReady` remain possible extension points, but should not be
+  added until we decide whether runtime-ish views are worth having.
+- The stronger original wish is raw request/response visibility. That likely
+  belongs to later trace/proxy/HTTP-hooks work, not Session-level synthetic
+  events.
+- Request editing is deferred. Changing existing conversation messages should
+  require branching/correction canonical events, not only an edited approved
+  request snapshot that diverges from session history.
 - Canonical event log remains semantic session history only.
 - Request-local developer messages are a future idea, not part of this slice:
   later request modifiers/hooks may inject them after `RequestBuilt` and before
-  `RequestApproved`, and the accepted `ChatRequest` snapshot should preserve
+  `RequestApproved`, and the accepted `ModelRequest` snapshot should preserve
   whatever was finally sent.
 
 ### Tasks
@@ -244,41 +243,22 @@ and later UI work can show the real prompt Dave sends.
   - describe event families: canonical events, stream events, debug events
   - add a compact table for existing event names, family, meaning, and whether
     they are canonical
-  - document that debug events expose inspectable runtime views, not raw HTTP
+  - document that future debug events would expose inspectable runtime views,
+    not raw HTTP
 - [x] Add session system prompt support
   - add a canonical system-prompt event such as `SystemPromptSet`
   - expose a small session API for setting/replacing the active system prompt
   - prepend the active system prompt as the first `SystemMessage` in
     `build_request()`
-  - keep the resulting system message visible in `RequestBuilt`,
-    `DebugRequestReady`, and the approved request snapshot
-  - *dev comment* `DebugRequestReady` does not exist yet; this task makes the
-    system prompt visible in `RequestBuilt` and the approved request snapshot,
-    so the later debug event can reuse that request view.
-- [ ] Define debug stream events
-  - add `DebugRequestReady`
-  - add `DebugResponseReady`
-  - keep payload shape small and artifact-friendly so large debug data can move
-    behind `ArtifactRef`
-- [ ] Emit request debug view
-  - keep `RequestBuilt` as Dave's editable `ChatRequest` boundary
-  - build provider call payload once and use that same object for both
-    `DebugRequestReady` and the SDK/provider call
-  - avoid reconstructing debug request data after the fact
-- [ ] Emit response debug view
-  - accumulate response/debug data while adapting provider stream events
-  - emit `DebugResponseReady` after streaming finishes
-  - include reasoning/text data at the runtime-debug level, not raw chunks
-- [ ] Keep provider chunks out of the public stream
-  - do not add `ProviderChunkReceived` in this slice
-  - keep live UI-facing output as `TextDelta` / `ReasoningDelta`
-- [ ] Add broad flow coverage
-  - prove the normal session flow emits request debug, semantic deltas, response
-    debug, and the final canonical assistant commit in sensible order
-  - prove debug events do not enter the canonical event log
-- [ ] Update smoke visibility
-  - make the real-provider smoke script show the new debug events in a concise
-    way
+  - keep the resulting system message visible in `RequestBuilt` and the
+    approved request snapshot
+- [x] Defer request/response debug event API
+  - do not add `DebugRequestReady` / `DebugResponseReady` in this slice
+  - keep debug events available as a future extension point
+  - move raw request/response visibility to later trace/proxy/HTTP-hooks work
+  - *dev comment* the original wish was closer to raw wire visibility than
+    runtime-ish debug objects; synthetic Session events would be a half-step
+    unless/until we decide they are useful on their own.
 
 ## Open questions
 
@@ -303,9 +283,30 @@ and later UI work can show the real prompt Dave sends.
     becomes a real requirement
 - Explore request-local developer messages as a request modification mechanism:
   a future hook/plugin could inspect `RequestBuilt`, inject a `DeveloperMessage`
-  before `RequestApproved`, and let `RequestApproved` / `DebugRequestReady`
-  record the final accepted `ChatRequest` without making the developer message
-  durable session history.
+  before `RequestApproved`, and let `RequestApproved` record the final accepted
+  `ModelRequest` without making the developer message durable session history.
+- Revisit request/response visibility:
+  - decide whether Dave needs runtime-level debug events, raw wire-level
+    tracing, or both
+  - if runtime-level debug events are useful, define names like
+    `DebugRequestReady` / `DebugResponseReady` with explicit "not raw HTTP"
+    semantics
+  - if raw wire visibility is the real goal, explore proxy, HTTP hooks, or SDK
+    trace capture instead of synthetic Session events
+  - define request editing semantics before exposing editable debug requests;
+    editing existing conversation messages likely belongs with branching or
+    correction canonical events
+- Revisit OpenAI-compatible provider API choice:
+  - compare Chat Completions and Responses API after more local/provider
+    testing
+  - check whether Responses API gives better typed reasoning/output structure
+    for local OpenAI-compatible endpoints
+  - keep current Chat Completions implementation unless the comparison shows a
+    clear benefit
+- Survey opencode and pi.dev coding-agent features:
+  - look for useful capabilities Dave should consciously keep room for
+  - focus on extension points and architecture pressure, not scope expansion
+  - capture any strong ideas as future spikes before implementation
 - Decide how large files or long pasted user text should enter model requests:
   inline content, artifact-backed message parts, summaries, provider uploads, or
   another representation.

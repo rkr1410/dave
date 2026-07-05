@@ -24,7 +24,7 @@ from dave.core.messages import (
     ToolMessage,
     UserMessage,
 )
-from dave.core.requests import ChatRequest
+from dave.core.requests import ModelRequest
 from dave.core.stream_events import ReasoningDelta, StreamEvent, TextDelta
 from dave.providers.client import ProviderClient, ProviderError
 
@@ -48,7 +48,7 @@ class OpenAICompatibleProviderClient(ProviderClient):
             api_key=self.api_key,
         )
 
-    async def stream(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
+    async def stream(self, request: ModelRequest) -> AsyncIterator[StreamEvent]:
         try:
             stream = ensure_async_iterable_stream(
                 await self._client.chat.completions.create(

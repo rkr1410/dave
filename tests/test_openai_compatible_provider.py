@@ -8,7 +8,7 @@ from openai.types.chat.chat_completion_chunk import (
 )
 
 from dave.core.messages import UserMessage
-from dave.core.requests import ChatRequest
+from dave.core.requests import ModelRequest
 from dave.core.stream_events import ReasoningDelta, TextDelta
 from dave.providers.client import ProviderError
 from dave.providers.openai_compatible import (
@@ -136,7 +136,7 @@ class OpenAICompatibleProviderTest(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaisesRegex(ProviderError, "RuntimeError: boom"):
             async for _ in provider.stream(
-                ChatRequest(
+                ModelRequest(
                     model="test-model",
                     messages=(UserMessage(content="hello"),),
                 )
