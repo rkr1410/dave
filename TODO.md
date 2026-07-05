@@ -286,8 +286,8 @@ Submitting text streams a model response through `Session.submit_user_message`.
 - Default provider is fake so `dave` works after install without hidden setup.
 - Real OpenAI-compatible provider is selected through explicit CLI flags such
   as `--base-url`, `--model`, and optional `--api-key`.
-- Configuration stays minimal. Do not add config files or env loading in this
-  slice.
+- Configuration stays minimal. Do not add general config files or env loading
+  in this slice; a checked-in smoke TOML for manual UI runs is allowed.
 - `ReasoningDelta` should be visible in the simplest useful way, but not as a
   separate debug panel.
 - Introduce a small UI presenter/transcript state between runtime events and
@@ -320,18 +320,15 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - named Textual widgets such as `ConversationView`, `PromptInput`, and
     `StatusBar`
   - no separate debug pane in this slice
-- [ ] Add Textual app skeleton
+- [x] Add Textual app skeleton
   - keep it under a UI package, separate from runtime
   - wire it to an injectable `Session`
   - consume `UserMessageAppended`, `TextDelta`, `ReasoningDelta`,
-    `ModelResponseFailed`, and `AssistantMessageAppended`
-- [ ] Add basic in-flight response cancellation
-  - keep input disabled while streaming, but keep a cancel shortcut available
-  - `Esc` stops the current model response
-  - cancellation does not roll back the submitted user message
-  - partial assistant/reasoning output may remain visible, clearly marked as
-    cancelled, but must not become a completed assistant message
-  - no interrupt-with-correction or prompt reopening in this slice
+    `ModelResponseFinished`, `ModelResponseFailed`, and
+    `AssistantMessageAppended`
+  - *dev comment* `DaveTextualApp` is the event listener/controller,
+    `ConversationPresenter` maps runtime events to transcript state, and
+    Textual widgets render that state.
 - [ ] Wire `dave` to launch the MVP UI
   - keep `--version`
 - [ ] Add minimal provider selection
@@ -339,7 +336,16 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - support explicit `--base-url`, `--model`, and optional `--api-key`
   - support optional `--system-prompt`
   - block input while a response is streaming; cancellation remains available
+- [ ] Add basic in-flight response cancellation
+  - keep input disabled while streaming, but keep a cancel shortcut available
+  - `Esc` stops the current model response
+  - cancellation does not roll back the submitted user message
+  - partial assistant/reasoning output may remain visible, clearly marked as
+    cancelled, but must not become a completed assistant message
+  - no interrupt-with-correction or prompt reopening in this slice
 - [ ] Add a manual smoke path
+  - add a smoke TOML for repeated local UI runs without retyping switches
+  - keep the smoke TOML separate from any future real config system
   - document the exact command to launch the UI
   - verify typing a prompt streams a response and leaves the app usable
 - [ ] Add focused tests only where they carry signal
