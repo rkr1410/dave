@@ -13,9 +13,14 @@ class RunnableApp(Protocol):
 
 
 AppFactory = Callable[[Session], RunnableApp]
+ModelDetector = Callable[[str, str | None], str]
 
 
-def main(argv: Sequence[str] | None = None, app_factory: AppFactory | None = None) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+    app_factory: AppFactory | None = None,
+    model_detector: ModelDetector | None = None,
+) -> int:
     parser = argparse.ArgumentParser(
         prog="dave",
         description="Dave terminal agent workbench.",
@@ -36,7 +41,7 @@ def main(argv: Sequence[str] | None = None, app_factory: AppFactory | None = Non
     parser.add_argument("--system-prompt", help="optional system prompt")
     args = parser.parse_args(argv)
 
-    session = build_session(args, parser)
+    session = build_session(args, parser, model_detector=model_detector)
 
     if app_factory is None:
         from dave.ui.textual import DaveTextualApp
@@ -47,24 +52,40 @@ def main(argv: Sequence[str] | None = None, app_factory: AppFactory | None = Non
     return 0
 
 
-def build_session(args: argparse.Namespace, parser: argparse.ArgumentParser) -> Session:
+def build_session(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+    model_detector: ModelDetector | None = None,
+) -> Session:
     if args.fake:
         if args.base_url or args.model or args.api_key:
             parser.error("--fake cannot be combined with --base-url, --model, or --api-key")
 
         session = Session.fake()
     else:
-        if not args.base_url and not args.model and not args.api_key:
+        if not args.base_url:
+            if args.model or args.api_key:
+                parser.error("--base-url is required with --model or --api-key")
             parser.error(
-                "choose a provider: use --fake or --base-url URL --model MODEL"
+                "choose a provider: use --fake or --base-url URL [--model MODEL]"
             )
-        if not args.base_url or not args.model:
-            parser.error("--base-url and --model are required together")
 
-        from dave.providers.openai_compatible import OpenAICompatibleProviderClient
+        from dave.providers.openai_compatible import (
+            OpenAICompatibleProviderClient,
+            discover_first_model,
+        )
+
+        model_detector = model_detector or discover_first_model
+        if args.model:
+            model = args.model
+        else:
+            try:
+                model = model_detector(args.base_url, args.api_key)
+            except RuntimeError as error:
+                parser.error(f"could not detect model; pass --model explicitly: {error}")
 
         session = Session(
-            model=args.model,
+            model=model,
             provider=OpenAICompatibleProviderClient(
                 base_url=args.base_url,
                 api_key=args.api_key,

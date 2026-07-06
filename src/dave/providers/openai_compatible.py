@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import AsyncIterable, AsyncIterator, Iterable
 from typing import Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from openai import AsyncOpenAI
 from openai.types.chat import (
@@ -29,6 +32,72 @@ from dave.runtime.stream_events import ReasoningDelta, StreamEvent, TextDelta
 from dave.providers.client import ProviderClient, ProviderError
 
 DEFAULT_API_KEY = "dummy"
+
+
+def discover_first_model(
+    base_url: str,
+    api_key: str | None = None,
+    timeout: float = 10,
+) -> str:
+    models = discover_models(base_url, api_key, timeout)
+    if not models:
+        raise RuntimeError("no usable model id in /models response")
+    return models[0]
+
+
+def discover_models(
+    base_url: str,
+    api_key: str | None = None,
+    timeout: float = 10,
+) -> tuple[str, ...]:
+    url = f"{base_url.rstrip('/')}/models"
+    request = Request(
+        url,
+        headers={"Authorization": f"Bearer {api_key or DEFAULT_API_KEY}"},
+    )
+
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            payload = json.load(response)
+    except HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {error.code}: {detail}") from error
+    except URLError as error:
+        raise RuntimeError(str(error.reason)) from error
+    except ValueError as error:
+        raise RuntimeError(f"invalid JSON: {error}") from error
+
+    return model_ids(payload)
+
+
+def model_ids(payload: Any) -> tuple[str, ...]:
+    if not isinstance(payload, dict):
+        return ()
+
+    models: list[str] = []
+
+    for collection_name in ("data", "models"):
+        collection = payload.get(collection_name)
+        if isinstance(collection, list):
+            models.extend(model_ids_from_collection(collection))
+
+    return tuple(models)
+
+
+def model_ids_from_collection(collection: list[Any]) -> tuple[str, ...]:
+    models: list[str] = []
+
+    for item in collection:
+        if not isinstance(item, dict):
+            continue
+
+        for key in ("id", "model", "name"):
+            value = item.get(key)
+            if isinstance(value, str) and value:
+                models.append(value)
+                break
+
+    return tuple(models)
 
 
 class OpenAICompatibleProviderClient(ProviderClient):

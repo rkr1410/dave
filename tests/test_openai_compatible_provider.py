@@ -14,6 +14,7 @@ from dave.providers.client import ProviderError
 from dave.providers.openai_compatible import (
     OpenAICompatibleProviderClient,
     adapt_openai_chat_completion_chunks,
+    model_ids,
 )
 
 
@@ -81,6 +82,20 @@ def empty_completion_chunk() -> ChatCompletionChunk:
 
 
 class OpenAICompatibleProviderTest(unittest.IsolatedAsyncioTestCase):
+    def test_detects_model_ids_from_openai_like_payloads(self) -> None:
+        self.assertEqual(
+            model_ids({"data": [{"id": "openai-model"}, {"id": "second-model"}]}),
+            ("openai-model", "second-model"),
+        )
+        self.assertEqual(
+            model_ids({"models": [{"model": "local-model"}]}),
+            ("local-model",),
+        )
+        self.assertEqual(
+            model_ids({"models": [{"name": "named-model"}]}),
+            ("named-model",),
+        )
+
     async def test_adapts_reasoning_and_text_chunks(self) -> None:
         chunks = AsyncChunks(
             [

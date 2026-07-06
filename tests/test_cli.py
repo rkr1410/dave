@@ -39,13 +39,18 @@ class CliTest(unittest.TestCase):
         self.assertEqual(launched_apps[0].session.model, "fake")
         self.assertIsInstance(launched_apps[0].session.provider, FakeProviderClient)
 
-    def test_real_provider_launches_app(self) -> None:
+    def test_real_provider_launches_app_with_explicit_model(self) -> None:
         launched_apps: list[FakeApp] = []
+        detector_calls: list[tuple[str, str | None]] = []
 
         def make_app(session: Session) -> FakeApp:
             app = FakeApp(session)
             launched_apps.append(app)
             return app
+
+        def detect_model(base_url: str, api_key: str | None) -> str:
+            detector_calls.append((base_url, api_key))
+            return "detected-model"
 
         exit_code = main(
             [
@@ -59,6 +64,7 @@ class CliTest(unittest.TestCase):
                 "be brief",
             ],
             app_factory=make_app,
+            model_detector=detect_model,
         )
 
         session = launched_apps[0].session
@@ -71,6 +77,38 @@ class CliTest(unittest.TestCase):
         self.assertEqual(session.provider.base_url, "http://localhost:8000/v1")
         self.assertEqual(session.provider.api_key, "local-key")
         self.assertEqual(messages, (SystemMessage(content="be brief"),))
+        self.assertEqual(detector_calls, [])
+
+    def test_real_provider_detects_model_when_not_given(self) -> None:
+        launched_apps: list[FakeApp] = []
+        detector_calls: list[tuple[str, str | None]] = []
+
+        def make_app(session: Session) -> FakeApp:
+            app = FakeApp(session)
+            launched_apps.append(app)
+            return app
+
+        def detect_model(base_url: str, api_key: str | None) -> str:
+            detector_calls.append((base_url, api_key))
+            return "detected-model"
+
+        exit_code = main(
+            [
+                "--base-url",
+                "http://localhost:8000/v1",
+                "--api-key",
+                "local-key",
+            ],
+            app_factory=make_app,
+            model_detector=detect_model,
+        )
+
+        session = launched_apps[0].session
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(session.model, "detected-model")
+        self.assertIsInstance(session.provider, OpenAICompatibleProviderClient)
+        self.assertEqual(detector_calls, [("http://localhost:8000/v1", "local-key")])
 
     def test_main_requires_provider_choice(self) -> None:
         stderr = io.StringIO()
@@ -81,14 +119,14 @@ class CliTest(unittest.TestCase):
         self.assertEqual(raised.exception.code, 2)
         self.assertIn("choose a provider", stderr.getvalue())
 
-    def test_base_url_and_model_are_required_together(self) -> None:
+    def test_model_requires_base_url(self) -> None:
         stderr = io.StringIO()
 
         with self.assertRaises(SystemExit) as raised, redirect_stderr(stderr):
-            main(["--base-url", "http://localhost:8000/v1"], app_factory=FakeApp)
+            main(["--model", "local-model"], app_factory=FakeApp)
 
         self.assertEqual(raised.exception.code, 2)
-        self.assertIn("--base-url and --model are required together", stderr.getvalue())
+        self.assertIn("--base-url is required with --model", stderr.getvalue())
 
     def test_version_does_not_launch_app(self) -> None:
         stdout = io.StringIO()

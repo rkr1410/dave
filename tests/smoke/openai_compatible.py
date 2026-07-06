@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 from dave.runtime.events import (
     AssistantMessageAppended,
@@ -28,7 +25,10 @@ from dave.runtime.stream_events import (
     RequestSent,
     TextDelta,
 )
-from dave.providers.openai_compatible import OpenAICompatibleProviderClient
+from dave.providers.openai_compatible import (
+    OpenAICompatibleProviderClient,
+    discover_first_model,
+)
 
 DEFAULT_CONFIG_PATH = Path(__file__).with_suffix(".toml")
 DEFAULT_API_KEY = "dummy"
@@ -80,52 +80,10 @@ def optional_string(payload: dict[str, Any], key: str, default: str) -> str:
 
 
 def detect_model(config: SmokeConfig) -> str:
-    url = f"{config.base_url.rstrip('/')}/models"
-    request = Request(
-        url,
-        headers={"Authorization": f"Bearer {config.api_key}"},
-    )
-
     try:
-        with urlopen(request, timeout=10) as response:
-            payload = json.load(response)
-    except HTTPError as error:
-        detail = error.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Model discovery failed: HTTP {error.code}: {detail}") from error
-    except URLError as error:
-        raise RuntimeError(f"Model discovery failed: {error.reason}") from error
-
-    model = first_model_id(payload)
-    if model is None:
-        raise RuntimeError(f"Model discovery returned no usable model id: {payload!r}")
-    return model
-
-
-def first_model_id(payload: Any) -> str | None:
-    if not isinstance(payload, dict):
-        return None
-
-    for collection_name in ("data", "models"):
-        collection = payload.get(collection_name)
-        if isinstance(collection, list):
-            model = first_model_id_from_collection(collection)
-            if model is not None:
-                return model
-
-    return None
-
-
-def first_model_id_from_collection(collection: list[Any]) -> str | None:
-    for item in collection:
-        if not isinstance(item, dict):
-            continue
-
-        for key in ("id", "model", "name"):
-            value = item.get(key)
-            if isinstance(value, str) and value:
-                return value
-
-    return None
+        return discover_first_model(config.base_url, config.api_key)
+    except RuntimeError as error:
+        raise RuntimeError(f"Model discovery failed: {error}") from error
 
 
 async def run_smoke(config: SmokeConfig, model: str) -> int:

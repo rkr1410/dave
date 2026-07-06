@@ -286,8 +286,9 @@ Submitting text streams a model response through `Session.submit_user_message`.
   `--version`.
 - `dave` should not silently start with the fake provider. Fake mode is useful
   for tests and demos, but must be chosen explicitly with `--fake`.
-- Real OpenAI-compatible provider is selected through explicit CLI flags such
-  as `--base-url`, `--model`, and optional `--api-key`.
+- Real OpenAI-compatible provider is selected through `--base-url` plus
+  optional `--api-key`. `--model` stays as an override; without it Dave detects
+  the first model from OpenAI-compatible `/models`.
 - Configuration stays minimal. Do not add general config files or env loading
   in this slice; a checked-in smoke TOML for manual UI runs is allowed.
 - `ReasoningDelta` should be visible in the simplest useful way, but not as a
@@ -335,11 +336,19 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - keep `--version`
 - [x] Add minimal provider selection
   - support fake provider for deterministic local startup
-  - support explicit `--base-url`, `--model`, and optional `--api-key`
+  - support explicit `--base-url`, optional `--model`, and optional `--api-key`
+  - detect the first OpenAI-compatible model from `/models` when `--model` is
+    omitted
   - support optional `--system-prompt`
   - block input while a response is streaming; cancellation remains available
   - *dev comment* fake provider was moved from implicit CLI default to explicit
     `--fake`, because a default fake chat looked like a working real setup.
+  - *dev comment* `--model` remains a manual override for endpoints with more
+    than one model; autodetection is only a convenience for the common local
+    one-model case.
+  - *dev comment* OpenAI-compatible model discovery returns the model list;
+    CLI currently chooses the first model only when no explicit `--model` is
+    passed.
 - [ ] Add basic in-flight response cancellation
   - keep input disabled while streaming, but keep a cancel shortcut available
   - `Esc` stops the current model response
