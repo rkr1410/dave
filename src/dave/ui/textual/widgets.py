@@ -2,18 +2,33 @@
 
 from __future__ import annotations
 
-from textual.widgets import Input, Static
+from textual.widgets import Input, RichLog, Static
 
 from dave.ui.textual.presenter import TranscriptItem
 
 
-class ConversationView(Static):
+class ConversationView(RichLog):
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(
+            wrap=True,
+            highlight=False,
+            markup=False,
+            auto_scroll=True,
+            min_width=1,
+            **kwargs,
+        )
+
     def render_items(self, items: tuple[TranscriptItem, ...]) -> None:
+        self.clear()
+
         if not items:
-            self.update("")
             return
 
-        self.update("\n\n".join(format_item(item) for item in items))
+        self.write(
+            "\n\n".join(format_item(item) for item in items),
+            scroll_end=True,
+            animate=False,
+        )
 
 
 class PromptInput(Input):

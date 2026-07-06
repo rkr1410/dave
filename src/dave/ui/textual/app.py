@@ -18,12 +18,19 @@ class DaveTextualApp(App[None]):
 
     ConversationView {
         height: 1fr;
+        min-height: 0;
         padding: 1;
         border: solid $surface;
+        overflow-x: hidden;
+        overflow-y: scroll;
     }
 
     StatusBar {
         height: 1;
+    }
+
+    PromptInput {
+        height: 3;
     }
     """
 
