@@ -356,11 +356,14 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - partial assistant/reasoning output may remain visible, clearly marked as
     cancelled, but must not become a completed assistant message
   - no interrupt-with-correction or prompt reopening in this slice
-- [ ] Add a manual smoke path
+- [x] Add a manual smoke path
   - add a smoke TOML for repeated local UI runs without retyping switches
   - keep the smoke TOML separate from any future real config system
   - document the exact command to launch the UI
   - verify typing a prompt streams a response and leaves the app usable
+  - exact command: `.venv/bin/python tests/smoke/textual_ui.py`
+  - *dev comment* manually verified against a real endpoint: reasoning and
+    answer are visible, and `Esc` cancels an in-flight response.
 - [ ] Add focused tests only where they carry signal
   - prefer testing UI/session glue over widget internals
   - avoid brittle layout assertions in this first slice

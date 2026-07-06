@@ -1,0 +1,8 @@
+base_url = "http://HAL-9000.local:8000/v1"
+api_key = "dummy"
+
+# Optional. Omit to auto-detect the first model from /models.
+# model = "local-model"
+
+# Optional.
+# system_prompt = "You are Dave."
