@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from textual.app import App, ComposeResult
 from textual.widgets import Input
 
@@ -34,7 +36,10 @@ class DaveTextualApp(App[None]):
     }
     """
 
-    BINDINGS = [("ctrl+c", "quit", "Quit")]
+    BINDINGS = [
+        ("escape", "cancel_response", "Cancel response"),
+        ("ctrl+c", "quit", "Quit"),
+    ]
 
     def __init__(
         self,
@@ -44,6 +49,7 @@ class DaveTextualApp(App[None]):
         super().__init__()
         self.session = session or Session.fake()
         self.presenter = presenter or ConversationPresenter()
+        self._response_task: asyncio.Task[None] | None = None
 
     def compose(self) -> ComposeResult:
         yield ConversationView(id="conversation")
@@ -60,7 +66,30 @@ class DaveTextualApp(App[None]):
             return
 
         event.input.value = ""
-        await self.submit_prompt(prompt)
+        self.start_prompt(prompt)
+
+    def start_prompt(self, prompt: str) -> None:
+        if self._response_task is not None and not self._response_task.done():
+            return
+
+        self._response_task = asyncio.create_task(self._run_prompt(prompt))
+
+    async def _run_prompt(self, prompt: str) -> None:
+        try:
+            await self.submit_prompt(prompt)
+        except asyncio.CancelledError:
+            self.presenter.cancel_active_response()
+            self._render()
+        finally:
+            self._response_task = None
+
+    def action_cancel_response(self) -> None:
+        if self._response_task is None or self._response_task.done():
+            return
+
+        self._response_task.cancel()
+        self.presenter.cancel_active_response()
+        self._render()
 
     async def submit_prompt(self, prompt: str) -> None:
         prompt_input = self.query_one(PromptInput)

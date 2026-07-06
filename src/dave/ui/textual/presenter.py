@@ -72,6 +72,7 @@ class ConversationPresenter:
                 self.status = "idle"
             case ModelResponseFailed():
                 self._mark_active_items("failed")
+                self._clear_active_items()
                 self._items.append(
                     TranscriptItem("status", "model response failed", "failed")
                 )
@@ -79,6 +80,7 @@ class ConversationPresenter:
 
     def cancel_active_response(self) -> None:
         self._mark_active_items("cancelled")
+        self._clear_active_items()
         self.status = "cancelled"
 
     def _append_reasoning(self, text: str) -> None:

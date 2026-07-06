@@ -349,7 +349,7 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - *dev comment* OpenAI-compatible model discovery returns the model list;
     CLI currently chooses the first model only when no explicit `--model` is
     passed.
-- [ ] Add basic in-flight response cancellation
+- [x] Add basic in-flight response cancellation
   - keep input disabled while streaming, but keep a cancel shortcut available
   - `Esc` stops the current model response
   - cancellation does not roll back the submitted user message
