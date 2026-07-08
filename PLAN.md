@@ -17,8 +17,8 @@ see, shape, debug, and extend. Every important decision should be inspectable an
 3. Request/prompt visibility foundations
 4. Textual UI MVP
 5. Textual UI refinement
-6. Persistent event/trace/artifact storage
-7. Tool registry and tool execution
+6. Tool registry and tool execution
+7. Persistent event/trace/artifact storage
 8. Plugin and hook system
 9. Context compaction
 10. Conversation branching
@@ -54,4 +54,7 @@ see, shape, debug, and extend. Every important decision should be inspectable an
   execution stays in epic 7. The UI MVP targets the linear happy path
   (send text -> model response) without contradicting the loop shape.
 - Textual UI refinement is intentionally separate from the UI MVP so the first
-  usable interface can be polished before moving into storage/tools/plugins.
+  usable interface can be polished before moving into tools/storage/plugins.
+- Tool calls come before persistent trace/artifact storage because real tool
+  use will teach more about whether Dave is worth extending and what storage
+  actually needs to preserve.

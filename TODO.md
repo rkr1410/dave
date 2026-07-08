@@ -102,7 +102,7 @@ log from which the conversation can be materialized.
 
 Out of scope (later epics): real OpenAI-compatible client (epic 2), request/
 prompt visibility foundations (epic 3), UI (epic 4), UI refinement (epic 5),
-disk storage (epic 6), tool execution (epic 7), interactive approval UX
+tool execution (epic 6), disk storage (epic 7), interactive approval UX
 (epic 1 only proves the seam works), branching.
 
 ## Epic 2: OpenAI-compatible provider MVP
@@ -364,18 +364,25 @@ Submitting text streams a model response through `Session.submit_user_message`.
   - exact command: `.venv/bin/python tests/smoke/textual_ui.py`
   - *dev comment* manually verified against a real endpoint: reasoning and
     answer are visible, and `Esc` cancels an in-flight response.
-- [ ] Add focused tests only where they carry signal
+- [x] Add focused tests only where they carry signal
   - prefer testing UI/session glue over widget internals
   - avoid brittle layout assertions in this first slice
+  - *dev comment* current coverage is intentionally flow/integration-heavy:
+    CLI selection, provider chunks, session failure, presenter mapping,
+    Textual scroll, cancellation, and smoke launcher help.
 
 ## Epic 5: Textual UI refinement
 
 Goal: spend a short, feedback-driven pass making the first Textual UI pleasant
-to use before moving on to storage/tools/plugins. This epic is allowed to be
+to use before moving on to tools/storage/plugins. This epic is allowed to be
 more manual and iterative than the runtime/provider slices.
 
 Exit criterion: the MVP UI still does the same simple chat job, but feels good
 enough to keep using while developing the next epics.
+
+Status: closed for now. Small UI enhancements may still be interleaved with
+later epics, but larger visual/configuration work should become a separate
+task or spike.
 
 ### Decisions to record in code/docs
 
@@ -396,14 +403,28 @@ enough to keep using while developing the next epics.
 
 ### Candidate refinement areas
 
-- layout spacing and borders
-- user/assistant/reasoning presentation
-- input placeholder, focus, and disabled/streaming state
+- [x] Improve message/status visual presentation
+  - distinguish user, assistant, reasoning, status, and cancelled/failed states
+  - keep rendering simple and terminal-native
+  - avoid adding a theme/config system in this slice
+  - *dev comment* colors are centralized in `dave.ui.textual.theme` as
+    hardcoded gruvbox-dark-ish constants; extract a real theme/config system
+    only if more than one theme appears.
+- [x] Tune layout spacing and borders
+- [x] Tune user/assistant/reasoning presentation
+- [x] Keep prompt input usable/focused while streaming
+  - allow queued prompts while a response is in flight
+  - keep `Esc` as current-response cancellation
+- [x] Improve scroll behavior during streaming
+  - auto-follow only when already at the bottom
+  - preserve user scroll position when reading older output
+- [x] Add collapsible reasoning display
+  - reasoning starts collapsed
+  - streaming reasoning has a slow, subtle label pulse
 - optional "reopen interrupted prompt" UX: cancel stream, restore the last user
   text to input, and decide whether that is UI-only draft behavior or canonical
   history edit/branching
 - status line and error rendering
-- scroll behavior during streaming
 - keyboard shortcuts such as quit/cancel/clear if they remain small
 - color palette and readability
 - screenshot/manual review loop
@@ -455,6 +476,10 @@ enough to keep using while developing the next epics.
   - look for useful capabilities Dave should consciously keep room for
   - focus on extension points and architecture pressure, not scope expansion
   - capture any strong ideas as future spikes before implementation
+- Add Markdown rendering support for model responses:
+  - handle common LLM output such as tables, code blocks, lists, and emphasis
+  - decide whether assistant/reasoning text should use the same renderer
+  - keep raw text available if Markdown rendering becomes lossy or confusing
 - Decide how large files or long pasted user text should enter model requests:
   inline content, artifact-backed message parts, summaries, provider uploads, or
   another representation.
